@@ -247,6 +247,7 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                     <li><a href="admin.php" class="nav-link active">Dashboard</a></li>
                     <li><a href="matches.php" class="nav-link">Discover</a></li>
                     <li><a href="profile.php" class="nav-link">Profile</a></li>
+                    <li><a href="messages.php" class="nav-link">Messages</a></li>
                     <li><a href="logout.php" class="nav-link">Logout</a></li>
                 </ul>
             </nav>

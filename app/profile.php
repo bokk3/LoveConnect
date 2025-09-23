@@ -191,6 +191,7 @@ $csrfToken = generateCSRFToken();
                     <li><a href="admin.php" class="nav-link">Dashboard</a></li>
                     <li><a href="matches.php" class="nav-link">Matches</a></li>
                     <li><a href="profile.php" class="nav-link active">Profile</a></li>
+                    <li><a href="messages.php" class="nav-link">Messages</a></li>
                     <li><a href="logout.php" class="nav-link">Logout</a></li>
                 </ul>
             </nav>
