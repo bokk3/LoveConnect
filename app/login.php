@@ -1,23 +1,20 @@
 <?php
 /**
- * Login page with secure authentication
+ * Login page with secure authentication and CSRF protection
  * Handles both GET (display form) and POST (process login) requests
  */
 
 require_once 'db.php';
+require_once 'functions.php';
 
-// Start session with secure settings
-session_start([
-    'name' => SESSION_COOKIE_NAME,
-    'cookie_httponly' => true,
-    'cookie_secure' => isset($_SERVER['HTTPS']),
-    'cookie_samesite' => 'Strict',
-    'use_strict_mode' => true,
-]);
+// Start secure session
+startSecureSession();
 
 // Redirect if already logged in
-if (isset($_SESSION['user_id']) && validateSession()) {
-    header('Location: admin.php');
+if (isLoggedIn()) {
+    $intendedUrl = $_SESSION['intended_url'] ?? 'admin.php';
+    unset($_SESSION['intended_url']);
+    header("Location: {$intendedUrl}");
     exit;
 }
 
@@ -30,14 +27,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 /**
- * Process login attempt
+ * Process login attempt with security measures
  * 
  * @return string Error message if login fails, empty string on success
  */
 function processLogin(): string {
     global $username;
     
-    // Validate CSRF token (in production, implement proper CSRF protection)
+    // Rate limiting check
+    if (isRateLimited('login', 5, 300)) { // 5 attempts per 5 minutes
+        error_log('Rate limit exceeded for login from IP: ' . getClientIP());
+        return 'Too many login attempts. Please try again in 5 minutes.';
+    }
+    
+    // Validate CSRF token
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        error_log('CSRF token validation failed for login from IP: ' . getClientIP());
+        return 'Security token validation failed. Please try again.';
+    }
+    
+    // Validate input presence
     if (!isset($_POST['username']) || !isset($_POST['password'])) {
         return 'Missing required fields.';
     }
@@ -62,30 +71,45 @@ function processLogin(): string {
     try {
         // Get user from database
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('SELECT id, username, password_hash FROM users WHERE username = ? LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, username, password_hash, role FROM users WHERE username = ? LIMIT 1');
         $stmt->execute([$username]);
         $user = $stmt->fetch();
         
         if (!$user || !password_verify($password, $user['password_hash'])) {
             // Log failed login attempt
-            error_log("Failed login attempt for username: {$username} from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+            error_log("Failed login attempt for username: {$username} from IP: " . getClientIP());
             
             // Same error message for both invalid username and password (security)
             return 'Invalid username or password.';
         }
         
         // Successful authentication - create session
-        createUserSession($user['id'], $user['username']);
+        createUserSession($user['id'], $user['username'], $user['role']);
         
-        // Redirect to admin page
-        header('Location: admin.php');
+        // Set success message
+        setFlashMessage("Welcome back, {$user['username']}!", 'success');
+        
+        // Redirect to intended page or admin
+        $intendedUrl = $_SESSION['intended_url'] ?? 'admin.php';
+        unset($_SESSION['intended_url']);
+        
+        header("Location: {$intendedUrl}");
         exit;
         
     } catch (PDOException $e) {
         error_log('Database error during login: ' . $e->getMessage());
         return 'Login system temporarily unavailable. Please try again later.';
+    } catch (Exception $e) {
+        error_log('Login error: ' . $e->getMessage());
+        return 'An error occurred during login. Please try again.';
     }
 }
+
+// Clean up expired sessions periodically (1% chance)
+if (random_int(1, 100) === 1) {
+    cleanupExpiredSessions();
+}
+?>
 
 /**
  * Create user session in database and set session variables
@@ -287,6 +311,37 @@ if (random_int(1, 100) === 1) {
             font-size: 0.9rem;
         }
         
+        .flash-message {
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .flash-success {
+            background: #eef;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        
+        .flash-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .flash-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .flash-info {
+            background: #e8f4fd;
+            color: #2c5282;
+            border: 1px solid #bee3f8;
+        }
+        
         .footer {
             text-align: center;
             margin-top: 2rem;
@@ -302,6 +357,8 @@ if (random_int(1, 100) === 1) {
             <p>Please enter your credentials</p>
         </div>
         
+        <?php echo displayFlashMessages(); ?>
+        
         <?php if ($error): ?>
             <div class="error">
                 <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
@@ -309,6 +366,7 @@ if (random_int(1, 100) === 1) {
         <?php endif; ?>
         
         <form method="POST" action="">
+            <?= csrfTokenField() ?>
             <div class="form-group">
                 <label for="username">Username</label>
                 <input 
@@ -340,8 +398,15 @@ if (random_int(1, 100) === 1) {
         </form>
         
         <div class="footer">
-            <p><strong>Demo credentials:</strong> admin / admin123</p>
+            <p><strong>Demo credentials:</strong></p>
+            <p>Admin: admin / admin123</p>
+            <p>Editor: editor / editor123</p>
+            <p>User: user / user123</p>
             <p>Sessions expire after 30 minutes of inactivity</p>
+            <p style="margin-top: 1rem;">
+                <a href="register.php">Create new account</a> | 
+                <a href="password_reset.php">Forgot password?</a>
+            </p>
         </div>
     </div>
 </body>

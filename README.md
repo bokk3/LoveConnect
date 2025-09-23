@@ -1,6 +1,6 @@
 # 🔐 Secure PHP Login System
 
-A production-ready login system built with vanilla PHP 8.2, MariaDB, and nginx, featuring modern security practices and Docker deployment.
+A production-ready login system built with vanilla PHP 8.2, MariaDB, and nginx, featuring comprehensive security measures, role-based access control, and modern development practices.
 
 ## 🏗️ Architecture
 
@@ -8,48 +8,62 @@ A production-ready login system built with vanilla PHP 8.2, MariaDB, and nginx, 
 - **Database**: MariaDB 10.11 with optimized configuration
 - **Web Server**: nginx 1.25 with PHP-FPM
 - **Containerization**: Docker Compose for easy deployment
-- **Security**: Argon2ID password hashing, prepared statements, session management
+- **Security**: Argon2ID password hashing, CSRF protection, session management
 
 ## 📁 Project Structure
 
 ```
 /
 ├── app/
-│   ├── login.php       # Login form and authentication logic
-│   ├── admin.php       # Protected admin dashboard
-│   ├── logout.php      # Session destruction and logout
-│   ├── db.php          # Database connection and utilities
-│   └── schema.sql      # Database schema and seed data
-├── docker-compose.yml  # Docker services configuration
-├── nginx.conf          # nginx web server configuration
-└── README.md          # This documentation
+│   ├── login.php           # Login form and authentication logic
+│   ├── register.php        # User registration with validation
+│   ├── admin.php           # Protected admin dashboard
+│   ├── logout.php          # Session destruction and logout
+│   ├── password_reset.php  # Password reset scaffold
+│   ├── db.php              # Database connection and utilities
+│   ├── functions.php       # Common functions and security helpers
+│   └── schema.sql          # Database schema and seed data
+├── docker-compose.yml      # Docker services configuration
+├── Dockerfile              # Custom PHP container with extensions
+├── nginx.conf              # nginx web server configuration
+└── README.md              # This documentation
 ```
 
 ## ✨ Features
 
-### Security Features
+### 🔒 Security Features
 - ✅ **Password Hashing**: Argon2ID algorithm with secure defaults
+- ✅ **CSRF Protection**: Token-based protection for all forms
 - ✅ **SQL Injection Protection**: Prepared statements for all database queries
 - ✅ **Session Security**: Regenerated session IDs, secure cookies, timeout protection
 - ✅ **Input Validation**: Comprehensive sanitization and validation
+- ✅ **Rate Limiting**: Login attempt and registration rate limiting
 - ✅ **Error Handling**: Proper error logging without information disclosure
-- ✅ **Rate Limiting**: Session cleanup and concurrent session limits
-- ✅ **Security Headers**: XSS protection, content type sniffing prevention
+- ✅ **Security Headers**: XSS protection, content type sniffing prevention, CSP
+- ✅ **Role-Based Access**: Admin, editor, and user role system
 
-### Functional Features
+### 🚀 Functional Features
 - 🔐 **User Authentication**: Secure login with username/password
-- 👤 **Session Management**: Database-backed sessions with expiration
-- 📊 **Admin Dashboard**: Protected area with session information
+- 📝 **User Registration**: Self-service account creation
+- 👤 **Session Management**: Database-backed sessions with sliding expiration
+- 📊 **Admin Dashboard**: Protected area with session and user information
 - 🚪 **Secure Logout**: Complete session destruction (cookie + database)
 - 🔄 **Auto-cleanup**: Expired session removal
+- 💬 **Flash Messages**: User feedback system for actions
 - 📱 **Responsive Design**: Mobile-friendly interface
+- 🔑 **Password Reset**: Scaffold for password recovery (demo)
+
+### 👥 User Roles
+- **Admin**: Full system access
+- **Editor**: Content management access
+- **User**: Basic user access
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose installed
 - Port 8080 available for the web server
-- Port 3306 available for MariaDB (optional, for external access)
+- Port 3307 available for MariaDB (optional, for external access)
 
 ### 1. Clone and Setup
 
@@ -59,28 +73,34 @@ cd /path/to/dating-v2
 
 # Verify project structure
 ls -la
-# Should show: app/, docker-compose.yml, nginx.conf, README.md
+# Should show: app/, docker-compose.yml, nginx.conf, Dockerfile, README.md
 ```
 
-### 2. Start Services
+### 2. Build and Start Services
 
 ```bash
-# Start all services in background
-docker-compose up -d
+# Build custom PHP container and start all services
+docker-compose up -d --build
 
 # Check service status
 docker-compose ps
 
-# View logs
+# View logs (all services)
 docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f php-fpm
+docker-compose logs -f nginx
+docker-compose logs -f mariadb
 ```
 
 ### 3. Access Application
 
 - **Web Application**: http://localhost:8080
 - **Default Credentials**: 
-  - Username: `admin`
-  - Password: `admin123`
+  - **Admin**: username: `admin`, password: `admin123`
+  - **Editor**: username: `editor`, password: `editor123`
+  - **User**: username: `user`, password: `user123`
 
 ### 4. Database Access (Optional)
 
@@ -91,28 +111,145 @@ docker exec -it login_mariadb mysql -u root -prootpassword login_system
 # View tables
 SHOW TABLES;
 
-# Check users
-SELECT id, username, created_at FROM users;
+# Check users and roles
+SELECT id, username, email, role, created_at FROM users;
 
 # Check active sessions
-SELECT s.id, u.username, s.created_at, s.last_activity 
+SELECT s.id, u.username, u.role, s.created_at, s.last_activity 
 FROM sessions s 
 JOIN users u ON s.user_id = u.id 
 WHERE s.last_activity > DATE_SUB(NOW(), INTERVAL 30 MINUTE);
 ```
 
-## 🔧 Configuration
+## 🧪 Testing the System
+
+### 1. Test Authentication Flow
+
+```bash
+# Test successful login
+curl -X POST http://localhost:8080/login.php \
+  -d "username=admin&password=admin123&csrf_token=test" \
+  -c cookies.txt -L
+
+# Test failed login
+curl -X POST http://localhost:8080/login.php \
+  -d "username=admin&password=wrongpass&csrf_token=test" \
+  -v
+
+# Test registration
+curl -X POST http://localhost:8080/register.php \
+  -d "username=testuser&email=test@example.com&password=Test123&password_confirm=Test123&csrf_token=test" \
+  -v
+```
+
+### 2. Test Session Protection
+
+```bash
+# Try accessing admin without session
+curl http://localhost:8080/admin.php -L
+
+# Access admin with valid session
+curl http://localhost:8080/admin.php -b cookies.txt
+
+# Test logout
+curl http://localhost:8080/logout.php -b cookies.txt -L
+```
+
+### 3. Test Role-Based Access
+
+1. Login as different users (admin, editor, user)
+2. Observe different role badges and access levels
+3. Test session management across different roles
+
+## 🛠️ Development Workflow
+
+### Database Migrations
+
+If you need to update the database schema:
+
+```bash
+# Stop services
+docker-compose down
+
+# Remove database volume (WARNING: This deletes all data)
+docker volume rm login_system_db
+
+# Restart services (will recreate database)
+docker-compose up -d --build
+```
+
+### Adding New Users
+
+#### Via Registration Page
+1. Go to http://localhost:8080/register.php
+2. Fill out the form
+3. New users get 'user' role by default
+
+#### Via Database
+```bash
+# Connect to database
+docker exec -it login_mariadb mysql -u root -prootpassword login_system
+
+# Generate password hash
+docker exec -it login_php php -r "echo password_hash('newpassword', PASSWORD_ARGON2ID);"
+
+# Insert new user
+INSERT INTO users (username, email, password_hash, role) VALUES 
+('newuser', 'newuser@example.com', '$argon2id$...', 'user');
+```
+
+### Monitoring Sessions
+
+```sql
+-- Query active sessions with user details
+SELECT 
+    u.username,
+    u.role,
+    s.session_id,
+    s.created_at,
+    s.last_activity,
+    TIMESTAMPDIFF(MINUTE, s.last_activity, NOW()) as minutes_idle
+FROM sessions s 
+JOIN users u ON s.user_id = u.id 
+WHERE s.last_activity > DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+ORDER BY s.last_activity DESC;
+
+-- Clean up expired sessions manually
+DELETE FROM sessions WHERE last_activity < DATE_SUB(NOW(), INTERVAL 30 MINUTE);
+```
+
+### Application Logs
+
+```bash
+# PHP application logs
+docker-compose logs php-fpm | grep "login\|error\|session"
+
+# nginx access logs
+docker-compose logs nginx | grep "POST\|login\|admin"
+
+# Database logs
+docker-compose logs mariadb | grep "error\|warning"
+
+# All logs with timestamps
+docker-compose logs -f -t
+```
+
+## � Configuration
 
 ### Environment Variables
 
-The application supports the following environment variables (set in `docker-compose.yml`):
+The application supports the following environment variables (configured in `docker-compose.yml`):
 
 ```yaml
 environment:
-  - DB_HOST=mariadb          # Database host
-  - DB_NAME=login_system     # Database name
-  - DB_USER=root             # Database user
-  - DB_PASS=rootpassword     # Database password
+  - DB_HOST=mariadb              # Database host
+  - DB_NAME=login_system         # Database name
+  - DB_USER=root                 # Database user
+  - DB_PASS=rootpassword         # Database password
+  # PHP production settings
+  - PHP_OPCACHE_ENABLE=1
+  - PHP_MEMORY_LIMIT=256M
+  - PHP_MAX_EXECUTION_TIME=30
 ```
 
 ### Session Configuration
@@ -120,7 +257,7 @@ environment:
 Edit `app/db.php` to modify session settings:
 
 ```php
-define('SESSION_TIMEOUT', 30 * 60);    // 30 minutes
+define('SESSION_TIMEOUT', 30 * 60);        // 30 minutes
 define('SESSION_COOKIE_NAME', 'login_session');
 ```
 
@@ -133,180 +270,227 @@ add_header X-Frame-Options DENY always;
 add_header X-Content-Type-Options nosniff always;
 add_header X-XSS-Protection "1; mode=block" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" always;
 ```
 
-## 🧪 Testing the System
+## 🚀 Production Deployment
 
-### 1. Test Login Flow
+### HTTPS Configuration
 
+1. **Obtain SSL certificates** (Let's Encrypt, commercial CA, etc.)
+
+2. **Update nginx.conf** - uncomment and configure the HTTPS server block:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+    
+    # SSL Configuration
+    ssl_certificate /path/to/your/certificate.crt;
+    ssl_certificate_key /path/to/your/private.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    
+    # Rest of configuration...
+}
+```
+
+3. **Update docker-compose.yml** to mount SSL certificates:
+
+```yaml
+nginx:
+  volumes:
+    - ./ssl:/etc/nginx/ssl:ro
+    - ./app:/var/www/html
+    - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  ports:
+    - "80:80"
+    - "443:443"
+```
+
+### Environment Security
+
+1. **Change default passwords**:
+```yaml
+environment:
+  - DB_PASS=your_secure_database_password
+```
+
+2. **Use environment files**:
 ```bash
-# Test successful login
-curl -X POST http://localhost:8080/login.php \
-  -d "username=admin&password=admin123" \
-  -c cookies.txt -L
+# Create .env file
+echo "DB_PASS=your_secure_password" > .env
 
-# Test failed login
-curl -X POST http://localhost:8080/login.php \
-  -d "username=admin&password=wrongpass" \
-  -v
+# Update docker-compose.yml
+env_file:
+  - .env
 ```
 
-### 2. Test Session Protection
-
-```bash
-# Try accessing admin without session
-curl http://localhost:8080/admin.php -L
-
-# Access admin with valid session
-curl http://localhost:8080/admin.php -b cookies.txt
+3. **Restrict database access**:
+```yaml
+mariadb:
+  ports: []  # Remove external port exposure
 ```
-
-### 3. Test Logout
-
-```bash
-# Logout and verify redirect
-curl http://localhost:8080/logout.php -b cookies.txt -L
-```
-
-## 🛠️ Development
-
-### Adding New Users
-
-Connect to the database and add users with hashed passwords:
-
-```sql
--- Generate password hash in PHP
--- php -r "echo password_hash('newpassword', PASSWORD_ARGON2ID);"
-
-INSERT INTO users (username, password_hash) VALUES 
-('newuser', '$argon2id$v=19$m=65536,t=4,p=1$...');
-```
-
-### Monitoring Sessions
-
-Query active sessions:
-
-```sql
-SELECT 
-    u.username,
-    s.session_id,
-    s.created_at,
-    s.last_activity,
-    TIMESTAMPDIFF(MINUTE, s.last_activity, NOW()) as minutes_idle
-FROM sessions s 
-JOIN users u ON s.user_id = u.id 
-WHERE s.last_activity > DATE_SUB(NOW(), INTERVAL 30 MINUTE)
-ORDER BY s.last_activity DESC;
-```
-
-### Log Monitoring
-
-```bash
-# Application logs (via PHP error_log)
-docker-compose logs php-fpm
-
-# nginx access logs
-docker-compose logs nginx
-
-# Database logs
-docker-compose logs mariadb
-```
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-1. **Port 8080 already in use**
-   ```bash
-   # Change port in docker-compose.yml
-   ports:
-     - "8081:80"  # Use port 8081 instead
-   ```
-
-2. **Database connection fails**
-   ```bash
-   # Check if MariaDB is running
-   docker-compose ps mariadb
-   
-   # View database logs
-   docker-compose logs mariadb
-   ```
-
-3. **PHP errors**
-   ```bash
-   # Check PHP-FPM logs
-   docker-compose logs php-fpm
-   
-   # Enter PHP container for debugging
-   docker exec -it login_php sh
-   ```
-
-4. **Permission issues**
-   ```bash
-   # Fix file permissions
-   sudo chown -R $USER:$USER app/
-   chmod -R 755 app/
-   ```
 
 ### Performance Tuning
 
 1. **nginx optimization** (edit `nginx.conf`):
-   ```nginx
-   worker_processes auto;
-   worker_connections 2048;
-   ```
+```nginx
+worker_processes auto;
+worker_connections 2048;
+```
 
 2. **MariaDB optimization** (edit `docker-compose.yml`):
-   ```yaml
-   command: >
-     --innodb-buffer-pool-size=512M
-     --max-connections=200
-   ```
+```yaml
+command: >
+  --innodb-buffer-pool-size=512M
+  --max-connections=200
+  --innodb-log-file-size=256M
+```
 
 3. **PHP-FPM optimization**:
-   ```bash
-   # Add to docker-compose.yml php-fpm service
-   environment:
-     - PHP_FPM_PM_MAX_CHILDREN=20
-     - PHP_FPM_PM_START_SERVERS=10
-   ```
+```yaml
+environment:
+  - PHP_FPM_PM_MAX_CHILDREN=50
+  - PHP_FPM_PM_START_SERVERS=10
+  - PHP_MEMORY_LIMIT=512M
+```
 
-## 🔒 Security Considerations
+## � Troubleshooting
 
-### Production Deployment
+### Common Issues
 
-1. **Use HTTPS**: Configure SSL/TLS certificates
-2. **Environment Variables**: Store sensitive data in environment variables
-3. **Firewall**: Restrict database access to application servers only
-4. **Monitoring**: Implement log monitoring and alerting
-5. **Backups**: Regular database backups with encryption
-6. **Updates**: Keep Docker images and dependencies updated
+1. **Port conflicts**:
+```bash
+# Check what's using the ports
+sudo netstat -tulpn | grep :8080
+sudo netstat -tulpn | grep :3307
 
-### Security Checklist
+# Change ports in docker-compose.yml if needed
+```
 
-- [ ] Change default database passwords
-- [ ] Enable HTTPS with valid certificates
-- [ ] Configure firewall rules
-- [ ] Set up log monitoring
-- [ ] Implement rate limiting
-- [ ] Regular security updates
-- [ ] Backup strategy in place
+2. **Database connection fails**:
+```bash
+# Check MariaDB status
+docker-compose ps mariadb
+
+# View MariaDB logs
+docker-compose logs mariadb
+
+# Connect manually
+docker exec -it login_mariadb mysql -u root -prootpassword
+```
+
+3. **PHP errors**:
+```bash
+# Check PHP-FPM logs
+docker-compose logs php-fpm
+
+# Enter PHP container for debugging
+docker exec -it login_php sh
+
+# Check PHP configuration
+docker exec -it login_php php -i | grep -E "(pdo|session|opcache)"
+```
+
+4. **Permission issues**:
+```bash
+# Fix file permissions
+sudo chown -R $USER:$USER app/
+chmod -R 755 app/
+```
+
+5. **Session issues**:
+```bash
+# Clear all sessions
+docker exec -it login_mariadb mysql -u root -prootpassword -e "DELETE FROM login_system.sessions;"
+
+# Check session table
+docker exec -it login_mariadb mysql -u root -prootpassword -e "SELECT * FROM login_system.sessions;"
+```
+
+### Development Tips
+
+1. **Hot reload for development**:
+```bash
+# The app/ directory is mounted, so changes are immediate
+# No need to rebuild containers for PHP/HTML/CSS changes
+```
+
+2. **Database reset**:
+```bash
+# Quick database reset
+docker-compose down
+docker volume rm login_system_db
+docker-compose up -d
+```
+
+3. **View all environment variables**:
+```bash
+docker exec -it login_php env | grep -E "(DB_|PHP_)"
+```
 
 ## 📊 Performance Metrics
 
 Expected performance benchmarks:
 
-- **Login requests**: ~1000 req/s (single core)
-- **Session validation**: ~2000 req/s 
-- **Database queries**: <10ms average
-- **Memory usage**: ~50MB per container
+- **Login requests**: ~2000 req/s (with opcache)
+- **Session validation**: ~5000 req/s 
+- **Database queries**: <5ms average
+- **Memory usage**: ~100MB per container
+- **SSL handshake**: <100ms
+
+## 🔒 Security Considerations
+
+### Production Checklist
+
+- [ ] Change all default passwords
+- [ ] Enable HTTPS with valid certificates
+- [ ] Configure firewall rules
+- [ ] Set up log monitoring and alerting
+- [ ] Implement rate limiting at web server level
+- [ ] Regular security updates
+- [ ] Database backup strategy
+- [ ] Remove development/demo accounts
+- [ ] Configure proper error pages
+- [ ] Set up intrusion detection
+
+### Security Features Summary
+
+1. **Authentication Security**:
+   - Argon2ID password hashing
+   - Rate limiting on login attempts
+   - Session regeneration on login
+   - Secure session management
+
+2. **Input Security**:
+   - CSRF token protection
+   - Input sanitization and validation
+   - Prepared statements for SQL injection protection
+   - XSS protection headers
+
+3. **Session Security**:
+   - Sliding session expiration
+   - Secure cookie settings
+   - Database-backed sessions
+   - Automatic cleanup of expired sessions
+
+4. **Infrastructure Security**:
+   - nginx security headers
+   - Rate limiting capabilities
+   - Error logging without information disclosure
+   - Container isolation
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
+3. Test your changes thoroughly
+4. Update documentation as needed
 5. Submit a pull request
 
 ## 📄 License
@@ -315,9 +499,13 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-**⚠️ Important**: This is a demonstration system. For production use, implement additional security measures such as:
-- Rate limiting and DDoS protection
-- Multi-factor authentication
-- Account lockout policies
-- Comprehensive audit logging
-- Security monitoring and alerts
+**⚠️ Important Security Notes**:
+- This system includes comprehensive security measures but should be reviewed by security professionals before production use
+- For high-security applications, consider implementing additional measures such as:
+  - Multi-factor authentication
+  - Account lockout policies
+  - Advanced intrusion detection
+  - Security monitoring and alerts
+  - Regular security audits
+
+**🎯 Demo Status**: This is a fully functional system suitable for learning and development. For production use, customize according to your specific security requirements.

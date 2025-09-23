@@ -16,9 +16,11 @@ services:
       - login_network
     restart: unless-stopped
 
-  # PHP-FPM 8.2 with PDO MySQL
+  # PHP-FPM 8.2 with production settings
   php-fpm:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: login_php
     volumes:
       - ./app:/var/www/html
@@ -27,6 +29,15 @@ services:
       - DB_NAME=login_system
       - DB_USER=root
       - DB_PASS=rootpassword
+      # PHP production settings
+      - PHP_OPCACHE_ENABLE=1
+      - PHP_OPCACHE_MEMORY_CONSUMPTION=256
+      - PHP_OPCACHE_MAX_ACCELERATED_FILES=20000
+      - PHP_OPCACHE_REVALIDATE_FREQ=60
+      - PHP_MEMORY_LIMIT=256M
+      - PHP_MAX_EXECUTION_TIME=30
+      - PHP_POST_MAX_SIZE=8M
+      - PHP_UPLOAD_MAX_FILESIZE=2M
     depends_on:
       - mariadb
     networks:
@@ -63,3 +74,4 @@ networks:
 volumes:
   mariadb_data:
     driver: local
+    name: login_system_db

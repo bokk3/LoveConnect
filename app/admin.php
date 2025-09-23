@@ -5,26 +5,17 @@
  */
 
 require_once 'db.php';
+require_once 'functions.php';
 
-// Start session with secure settings
-session_start([
-    'name' => SESSION_COOKIE_NAME,
-    'cookie_httponly' => true,
-    'cookie_secure' => isset($_SERVER['HTTPS']),
-    'cookie_samesite' => 'Strict',
-    'use_strict_mode' => true,
-]);
+// Start secure session and require login
+startSecureSession();
+requireLogin();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id']) || !validateSession()) {
-    // Destroy invalid session
-    session_destroy();
-    header('Location: login.php');
-    exit;
-}
-
-// Update session activity
-updateSessionActivity();
+// Get user session statistics
+$sessionStats = getUserSessionStats();
+$username = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
+$role = htmlspecialchars($_SESSION['role'], ENT_QUOTES, 'UTF-8');
+$sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
 
 /**
  * Validate current session against database
@@ -273,13 +264,60 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
             font-size: 1rem;
         }
         
-        .alert {
-            background: #e8f4fd;
-            color: #2c5282;
-            padding: 1rem;
-            border: 1px solid #bee3f8;
+        .flash-message {
+            padding: 0.75rem;
             border-radius: 5px;
             margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .flash-success {
+            background: #eef;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        
+        .flash-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .flash-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .flash-info {
+            background: #e8f4fd;
+            color: #2c5282;
+            border: 1px solid #bee3f8;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 0.5rem;
+        }
+        
+        .role-admin {
+            background: #fee;
+            color: #c53030;
+        }
+        
+        .role-editor {
+            background: #fef5e7;
+            color: #d69e2e;
+        }
+        
+        .role-user {
+            background: #e6fffa;
+            color: #38b2ac;
         }
         
         @media (max-width: 768px) {
@@ -302,11 +340,14 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
 </head>
 <body>
     <div class="container">
+        <?php echo displayFlashMessages(); ?>
+        
         <div class="header">
             <div>
                 <h1>🛡️ Admin Dashboard</h1>
                 <div class="user-info">
                     Welcome back, <strong><?= $username ?></strong>
+                    <span class="role-badge role-<?= $role ?>"><?= $role ?></span>
                 </div>
             </div>
             <div class="actions">
@@ -326,6 +367,13 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                 <div class="stat-item">
                     <span class="stat-label">Username</span>
                     <span class="stat-value"><?= $username ?></span>
+                </div>
+                
+                <div class="stat-item">
+                    <span class="stat-label">Role</span>
+                    <span class="stat-value">
+                        <span class="role-badge role-<?= $role ?>"><?= ucfirst($role) ?></span>
+                    </span>
                 </div>
                 
                 <div class="stat-item">
