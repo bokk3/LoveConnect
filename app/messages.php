@@ -40,33 +40,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // Get current conversation if match_id is provided
-$currentMatchId = isset($_GET['match']) ? $_GET['match'] : null;
+$currentMatchId = isset($_GET['match']) ? (int)$_GET['match'] : null;
 $currentConversation = null;
 
 if ($currentMatchId) {
-    // Parse match_key to get user IDs and verify this is a valid match
-    if (preg_match('/^(\d+)_(\d+)$/', $currentMatchId, $matches)) {
-        $user1Id = (int)$matches[1];
-        $user2Id = (int)$matches[2];
-        
-        // Verify current user is part of this match
-        if ($currentUser['id'] == $user1Id || $currentUser['id'] == $user2Id) {
-            $partnerId = $currentUser['id'] == $user1Id ? $user2Id : $user1Id;
-            
-            // Get partner information
-            $stmt = $pdo->prepare('SELECT username FROM users WHERE id = ?');
-            $stmt->execute([$partnerId]);
-            $partner = $stmt->fetch();
-            
-            if ($partner) {
-                $currentConversation = [
-                    'partner_name' => $partner['username'],
-                    'partner_id' => $partnerId,
-                    'created_at' => date('Y-m-d H:i:s') // Placeholder
-                ];
-            }
-        }
-    }
+    // Get conversation info from existing messages
+    $stmt = $pdo->prepare('
+        SELECT 
+            m.match_id,
+            CASE 
+                WHEN m.sender_id = ? THEN u2.username 
+                ELSE u1.username 
+            END as partner_name,
+            CASE 
+                WHEN m.sender_id = ? THEN u2.id 
+                ELSE u1.id 
+            END as partner_id,
+            MIN(m.created_at) as created_at
+        FROM messages m
+        JOIN users u1 ON m.sender_id = u1.id
+        JOIN users u2 ON m.recipient_id = u2.id
+        WHERE m.match_id = ? AND (m.sender_id = ? OR m.recipient_id = ?)
+        GROUP BY m.match_id
+    ');
+    $stmt->execute([$currentUser['id'], $currentUser['id'], $currentMatchId, $currentUser['id'], $currentUser['id']]);
+    $currentConversation = $stmt->fetch();
 }
 
 // Functions for message handling
@@ -75,44 +73,33 @@ function sendMessage($pdo, $userId, $data) {
         return ['success' => false, 'error' => 'Invalid security token'];
     }
     
-    $matchKey = $data['match_id'] ?? '';
+    $matchId = (int)($data['match_id'] ?? 0);
     $message = trim($data['message'] ?? '');
     
     if (empty($message)) {
         return ['success' => false, 'error' => 'Message cannot be empty'];
     }
     
-    // Parse match_key to get user IDs
-    if (!preg_match('/^(\d+)_(\d+)$/', $matchKey, $matches)) {
-        return ['success' => false, 'error' => 'Invalid match key'];
-    }
-    
-    $user1Id = (int)$matches[1];
-    $user2Id = (int)$matches[2];
-    
-    // Verify user is part of this match
-    if ($userId != $user1Id && $userId != $user2Id) {
-        return ['success' => false, 'error' => 'Invalid match'];
-    }
-    
-    $recipientId = $userId == $user1Id ? $user2Id : $user1Id;
-    
-    // Verify this is a mutual match
+    // Verify user is part of this conversation by checking existing messages
     $stmt = $pdo->prepare('
-        SELECT COUNT(*) FROM matches m1
-        JOIN matches m2 ON m1.user_id = m2.matched_user_id AND m1.matched_user_id = m2.user_id
-        WHERE ((m1.user_id = ? AND m1.matched_user_id = ?) OR (m1.user_id = ? AND m1.matched_user_id = ?))
-        AND m1.status = "liked" AND m2.status = "liked"
+        SELECT DISTINCT sender_id, recipient_id 
+        FROM messages 
+        WHERE match_id = ? AND (sender_id = ? OR recipient_id = ?)
+        LIMIT 1
     ');
-    $stmt->execute([$user1Id, $user2Id, $user2Id, $user1Id]);
+    $stmt->execute([$matchId, $userId, $userId]);
+    $existing = $stmt->fetch();
     
-    if ($stmt->fetchColumn() == 0) {
-        return ['success' => false, 'error' => 'No mutual match found'];
+    if (!$existing) {
+        return ['success' => false, 'error' => 'Invalid conversation'];
     }
+    
+    // Determine recipient ID
+    $recipientId = $existing['sender_id'] == $userId ? $existing['recipient_id'] : $existing['sender_id'];
     
     // Insert message
     $stmt = $pdo->prepare('INSERT INTO messages (match_id, sender_id, recipient_id, message) VALUES (?, ?, ?, ?)');
-    $success = $stmt->execute([$matchKey, $userId, $recipientId, $message]);
+    $success = $stmt->execute([$matchId, $userId, $recipientId, $message]);
     
     if ($success) {
         return ['success' => true, 'message_id' => $pdo->lastInsertId()];
@@ -121,18 +108,18 @@ function sendMessage($pdo, $userId, $data) {
     }
 }
 
-function getMessages($pdo, $userId, $matchKey) {
-    // Parse match_key to get user IDs
-    if (!preg_match('/^(\d+)_(\d+)$/', $matchKey, $matches)) {
-        return ['success' => false, 'error' => 'Invalid match key'];
-    }
+function getMessages($pdo, $userId, $matchId) {
+    $matchId = (int)$matchId;
     
-    $user1Id = (int)$matches[1];
-    $user2Id = (int)$matches[2];
+    // Verify user is part of this conversation by checking existing messages
+    $stmt = $pdo->prepare('
+        SELECT COUNT(*) FROM messages 
+        WHERE match_id = ? AND (sender_id = ? OR recipient_id = ?)
+    ');
+    $stmt->execute([$matchId, $userId, $userId]);
     
-    // Verify user is part of this match
-    if ($userId != $user1Id && $userId != $user2Id) {
-        return ['success' => false, 'error' => 'Invalid match'];
+    if ($stmt->fetchColumn() == 0) {
+        return ['success' => false, 'error' => 'Invalid conversation'];
     }
     
     // Get messages
@@ -144,88 +131,46 @@ function getMessages($pdo, $userId, $matchKey) {
         WHERE m.match_id = ?
         ORDER BY m.created_at ASC
     ');
-    $stmt->execute([$matchKey]);
+    $stmt->execute([$matchId]);
     $messages = $stmt->fetchAll();
     
     return ['success' => true, 'messages' => $messages];
 }
 
-function markMessagesRead($pdo, $userId, $matchKey) {
+function markMessagesRead($pdo, $userId, $matchId) {
+    $matchId = (int)$matchId;
     $stmt = $pdo->prepare('UPDATE messages SET is_read = TRUE WHERE match_id = ? AND recipient_id = ?');
-    $stmt->execute([$matchKey, $userId]);
+    $stmt->execute([$matchId, $userId]);
     return ['success' => true];
 }
 
 function getConversations($pdo, $userId) {
-    // Get mutual matches (where both users liked each other)
+    // Get all messages where the user is involved, grouped by match_id
     $stmt = $pdo->prepare('
         SELECT 
-            LEAST(m1.user_id, m1.matched_user_id) as user1_id,
-            GREATEST(m1.user_id, m1.matched_user_id) as user2_id,
-            CASE WHEN m1.user_id = ? THEN u2.username ELSE u1.username END as partner_name,
-            CASE WHEN m1.user_id = ? THEN u2.id ELSE u1.id END as partner_id,
-            m1.created_at as matched_at,
-            CONCAT(LEAST(m1.user_id, m1.matched_user_id), "_", GREATEST(m1.user_id, m1.matched_user_id)) as match_key
-        FROM matches m1
-        JOIN users u1 ON LEAST(m1.user_id, m1.matched_user_id) = u1.id
-        JOIN users u2 ON GREATEST(m1.user_id, m1.matched_user_id) = u2.id
-        WHERE (m1.user_id = ? OR m1.matched_user_id = ?) 
-        AND m1.status = "liked"
-        AND EXISTS (
-            SELECT 1 FROM matches m2 
-            WHERE m2.user_id = m1.matched_user_id 
-            AND m2.matched_user_id = m1.user_id 
-            AND m2.status = "liked"
-        )
-        GROUP BY match_key
-        ORDER BY m1.created_at DESC
+            m.match_id,
+            CASE 
+                WHEN m.sender_id = ? THEN u2.username 
+                ELSE u1.username 
+            END as partner_name,
+            CASE 
+                WHEN m.sender_id = ? THEN u2.id 
+                ELSE u1.id 
+            END as partner_id,
+            MIN(m.created_at) as matched_at,
+            (SELECT msg.message FROM messages msg WHERE msg.match_id = m.match_id ORDER BY msg.created_at DESC LIMIT 1) as last_message,
+            (SELECT msg.created_at FROM messages msg WHERE msg.match_id = m.match_id ORDER BY msg.created_at DESC LIMIT 1) as last_message_time,
+            (SELECT msg.sender_id FROM messages msg WHERE msg.match_id = m.match_id ORDER BY msg.created_at DESC LIMIT 1) as last_sender_id,
+            SUM(CASE WHEN m.recipient_id = ? AND m.is_read = FALSE THEN 1 ELSE 0 END) as unread_count
+        FROM messages m
+        JOIN users u1 ON m.sender_id = u1.id
+        JOIN users u2 ON m.recipient_id = u2.id
+        WHERE m.sender_id = ? OR m.recipient_id = ?
+        GROUP BY m.match_id
+        ORDER BY last_message_time DESC
     ');
-    $stmt->execute([$userId, $userId, $userId, $userId]);
-    $matches = $stmt->fetchAll();
-    
-    // Now get last messages and unread counts for each conversation
-    $conversations = [];
-    foreach ($matches as $match) {
-        $matchKey = $match['match_key'];
-        
-        // Get last message for this conversation
-        $msgStmt = $pdo->prepare('
-            SELECT message, created_at, sender_id
-            FROM messages 
-            WHERE match_id = ?
-            ORDER BY created_at DESC 
-            LIMIT 1
-        ');
-        $msgStmt->execute([$matchKey]);
-        $lastMessage = $msgStmt->fetch();
-        
-        // Get unread count
-        $unreadStmt = $pdo->prepare('
-            SELECT COUNT(*) as count
-            FROM messages
-            WHERE match_id = ? AND recipient_id = ? AND is_read = FALSE
-        ');
-        $unreadStmt->execute([$matchKey, $userId]);
-        $unreadCount = $unreadStmt->fetchColumn();
-        
-        $conversations[] = [
-            'match_id' => $matchKey,
-            'partner_name' => $match['partner_name'],
-            'partner_id' => $match['partner_id'],
-            'matched_at' => $match['matched_at'],
-            'last_message' => $lastMessage ? $lastMessage['message'] : null,
-            'last_message_time' => $lastMessage ? $lastMessage['created_at'] : $match['matched_at'],
-            'last_sender_id' => $lastMessage ? $lastMessage['sender_id'] : null,
-            'unread_count' => $unreadCount
-        ];
-    }
-    
-    // Sort by last message time
-    usort($conversations, function($a, $b) {
-        return strtotime($b['last_message_time']) - strtotime($a['last_message_time']);
-    });
-    
-    return $conversations;
+    $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
+    return $stmt->fetchAll();
 }
 
 function getCurrentUser() {
