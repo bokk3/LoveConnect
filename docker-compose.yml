@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Nginx web server
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: login_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app:/var/www/html
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - php-fpm
+    networks:
+      - login_network
+    restart: unless-stopped
+
+  # PHP-FPM 8.2 with PDO MySQL
+  php-fpm:
+    build: .
+    container_name: login_php
+    volumes:
+      - ./app:/var/www/html
+    environment:
+      - DB_HOST=mariadb
+      - DB_NAME=login_system
+      - DB_USER=root
+      - DB_PASS=rootpassword
+    depends_on:
+      - mariadb
+    networks:
+      - login_network
+    restart: unless-stopped
+
+  # MariaDB database
+  mariadb:
+    image: mariadb:10.11
+    container_name: login_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: login_system
+      MYSQL_USER: loginuser
+      MYSQL_PASSWORD: loginpass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "3307:3306"
+    networks:
+      - login_network
+    restart: unless-stopped
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --max-connections=100
+
+networks:
+  login_network:
+    driver: bridge
+
+volumes:
+  mariadb_data:
+    driver: local
