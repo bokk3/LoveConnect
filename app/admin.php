@@ -56,19 +56,6 @@ function validateSession(): bool {
 }
 
 /**
- * Update session last activity timestamp
- */
-function updateSessionActivity(): void {
-    try {
-        $pdo = getDbConnection();
-        $stmt = $pdo->prepare('UPDATE sessions SET last_activity = NOW() WHERE user_id = ? AND session_id = ?');
-        $stmt->execute([$_SESSION['user_id'], $_SESSION['session_id']]);
-    } catch (PDOException $e) {
-        error_log('Failed to update session activity: ' . $e->getMessage());
-    }
-}
-
-/**
  * Get user session statistics
  * 
  * @return array Session statistics

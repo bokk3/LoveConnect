@@ -122,6 +122,22 @@ function validateSessionInDatabase(int $userId, string $sessionId): bool {
 }
 
 /**
+ * Clean up old sessions for a user (limit concurrent sessions)
+ * 
+ * @param int $userId User ID
+ */
+function cleanupUserSessions(int $userId): void {
+    try {
+        $pdo = getDbConnection();
+        // Remove old sessions for this user
+        $stmt = $pdo->prepare('DELETE FROM sessions WHERE user_id = ?');
+        $stmt->execute([$userId]);
+    } catch (Exception $e) {
+        error_log("Failed to cleanup user sessions: " . $e->getMessage());
+    }
+}
+
+/**
  * Create user session with security measures
  * 
  * @param int $userId User ID

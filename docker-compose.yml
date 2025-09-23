@@ -15,6 +15,11 @@ services:
     networks:
       - login_network
     restart: unless-stopped
+    command: >
+      sh -c "
+        rm -f /etc/nginx/conf.d/default.conf &&
+        nginx -g 'daemon off;'
+      "
 
   # PHP-FPM 8.2 with production settings
   php-fpm:
