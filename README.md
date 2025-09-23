@@ -1,31 +1,52 @@
-# 🔐 Secure PHP Login System
+# � LoveConnect - Mobile-First Dating Web App
 
-A production-ready login system built with vanilla PHP 8.2, MariaDB, and nginx, featuring comprehensive security measures, role-based access control, and modern development practices.
+A modern, secure dating web application built with PHP 8.2, featuring a mobile-first responsive design, comprehensive matching system, and advanced security features. Evolved from a secure login system into a full-featured dating platform.
+
+## 🌟 Features
+
+### Core Dating Functionality
+- **User Authentication** - Secure login/registration with Argon2ID password hashing
+- **Profile Management** - Comprehensive user profiles with bio, interests, and dating preferences
+- **Smart Matching** - Advanced matching algorithm based on age, location, gender preferences, and interests
+- **Swipe Interface** - Touch-friendly swipe gestures for mobile devices
+- **Real-time Matching** - Instant mutual match detection with visual feedback
+- **Session Management** - Secure session handling with automatic timeout
+
+### Modern Architecture
+- **Mobile-First Design** - Responsive CSS with touch-optimized interfaces
+- **ES6 JavaScript** - Modern JavaScript modules with Fetch API
+- **CSRF Protection** - Comprehensive security against cross-site request forgery
+- **Docker Ready** - Complete containerization with nginx + PHP-FPM + MariaDB
+- **Progressive Enhancement** - Works without JavaScript, enhanced with it
 
 ## 🏗️ Architecture
 
 - **Backend**: PHP 8.2 with PDO for database operations
-- **Database**: MariaDB 10.11 with optimized configuration
+- **Database**: MariaDB 10.11 with dating-optimized schema (users, matches, messages)
 - **Web Server**: nginx 1.25 with PHP-FPM
+- **Frontend**: Mobile-first CSS framework with ES6 JavaScript modules
 - **Containerization**: Docker Compose for easy deployment
 - **Security**: Argon2ID password hashing, CSRF protection, session management
 
 ## 📁 Project Structure
 
 ```
-/
+dating-v2/
 ├── app/
-│   ├── login.php           # Login form and authentication logic
-│   ├── register.php        # User registration with validation
-│   ├── admin.php           # Protected admin dashboard
-│   ├── logout.php          # Session destruction and logout
-│   ├── password_reset.php  # Password reset scaffold
-│   ├── db.php              # Database connection and utilities
-│   ├── functions.php       # Common functions and security helpers
-│   └── schema.sql          # Database schema and seed data
-├── docker-compose.yml      # Docker services configuration
-├── Dockerfile              # Custom PHP container with extensions
-├── nginx.conf              # nginx web server configuration
+│   ├── assets/
+│   │   ├── style.css      # Mobile-first CSS framework
+│   │   └── app.js         # ES6 JavaScript modules
+│   ├── login.php          # Login/registration with dating app design
+│   ├── admin.php          # Dating dashboard with stats and quick actions  
+│   ├── profile.php        # Profile management with bio and preferences
+│   ├── matches.php        # Discovery interface with swipe functionality
+│   ├── logout.php         # Session destruction and logout
+│   ├── db.php             # Database connection and utilities
+│   ├── functions.php      # Common functions and security helpers
+│   └── schema.sql         # Dating app database schema with sample profiles
+├── docker-compose.yml     # Docker services configuration
+├── Dockerfile             # Custom PHP container with extensions
+├── nginx.conf             # nginx web server configuration
 └── README.md              # This documentation
 ```
 
@@ -97,10 +118,13 @@ docker-compose logs -f mariadb
 ### 3. Access Application
 
 - **Web Application**: http://localhost:8080
-- **Default Credentials**: 
-  - **Admin**: username: `admin`, password: `admin123`
-  - **Editor**: username: `editor`, password: `editor123`
-  - **User**: username: `user`, password: `user123`
+- **Demo Dating Profiles**: 
+  - **admin** / password123 (Admin user)
+  - **alex_tech** / password123 (Software Developer, 28, interests: coding, hiking)
+  - **sarah_artist** / password123 (Artist, 25, interests: art, music, travel)
+  - **mike_chef** / password123 (Chef, 32, interests: cooking, wine, fitness)
+  - **emma_doctor** / password123 (Doctor, 29, interests: medicine, yoga, reading)
+  - **jordan_nb** / password123 (Writer, 26, interests: writing, coffee, films)
 
 ### 4. Database Access (Optional)
 

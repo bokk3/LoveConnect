@@ -157,8 +157,8 @@ function createUserSession(int $userId, string $username, string $role): void {
     try {
         // Insert session into database
         $pdo = getDbConnection();
-        $stmt = $pdo->prepare('INSERT INTO sessions (user_id, session_id) VALUES (?, ?)');
-        $stmt->execute([$userId, $sessionId]);
+        $stmt = $pdo->prepare('INSERT INTO sessions (user_id, session_id, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND))');
+        $stmt->execute([$userId, $sessionId, SESSION_TIMEOUT]);
         
         // Set session variables
         $_SESSION['user_id'] = $userId;

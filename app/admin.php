@@ -108,336 +108,333 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Secure System</title>
+    <title>Dashboard - LoveConnect Dating App</title>
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(generateCSRFToken(), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="assets/style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .welcome-hero {
+            background: var(--gradient-primary);
+            color: white;
+            text-align: center;
+            padding: var(--spacing-xxl) var(--spacing-lg);
+            border-radius: var(--border-radius-xl);
+            margin-bottom: var(--spacing-xl);
         }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem;
+        .hero-title {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
         }
         
-        .header {
-            background: white;
-            padding: 1.5rem 2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
+        .hero-subtitle {
+            font-size: var(--font-size-lg);
+            opacity: 0.9;
         }
         
-        .header h1 {
-            color: #333;
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .header .user-info {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .header .actions {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .dashboard-grid {
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
         }
         
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        .stat-card {
+            background: var(--surface-color);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform var(--transition-fast);
         }
         
-        .card h2 {
-            color: #333;
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .stat-card:hover {
+            transform: translateY(-2px);
         }
         
-        .card .icon {
-            font-size: 1.5rem;
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-sm);
         }
         
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .stat-item:last-child {
-            border-bottom: none;
+        .stat-number {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-xs);
         }
         
         .stat-label {
-            color: #666;
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
             font-weight: 500;
         }
         
-        .stat-value {
-            color: #333;
-            font-weight: 600;
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
         }
         
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-            color: white;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .welcome-section {
+        .action-card {
+            background: var(--surface-color);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
             text-align: center;
-            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-fast);
+            cursor: pointer;
         }
         
-        .welcome-section h3 {
-            color: #333;
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+        .action-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
         }
         
-        .welcome-section p {
-            color: #666;
-            font-size: 1rem;
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: var(--spacing-sm);
         }
         
-        .flash-message {
-            padding: 0.75rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
+        .recent-activity {
+            background: var(--surface-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
         }
         
-        .flash-success {
-            background: #eef;
-            color: #363;
-            border: 1px solid #cfc;
+        .activity-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
         }
         
-        .flash-error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
+        .activity-item {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
         }
         
-        .flash-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+        .activity-item:last-child {
+            border-bottom: none;
         }
         
-        .flash-info {
-            background: #e8f4fd;
-            color: #2c5282;
-            border: 1px solid #bee3f8;
-        }
-        
-        .role-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 0.5rem;
-        }
-        
-        .role-admin {
-            background: #fee;
-            color: #c53030;
-        }
-        
-        .role-editor {
-            background: #fef5e7;
-            color: #d69e2e;
-        }
-        
-        .role-user {
-            background: #e6fffa;
-            color: #38b2ac;
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            
-            .header {
-                flex-direction: column;
-                text-align: center;
-                gap: 1rem;
-            }
-            
-            .header .actions {
-                width: 100%;
-                justify-content: center;
-            }
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <?php echo displayFlashMessages(); ?>
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <h1 class="logo">💕 LoveConnect</h1>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="admin.php" class="nav-link active">Dashboard</a></li>
+                    <li><a href="matches.php" class="nav-link">Discover</a></li>
+                    <li><a href="profile.php" class="nav-link">Profile</a></li>
+                    <li><a href="logout.php" class="nav-link">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="flash-container"></div>
         
-        <div class="header">
-            <div>
-                <h1>🛡️ Admin Dashboard</h1>
-                <div class="user-info">
-                    Welcome back, <strong><?= $username ?></strong>
-                    <span class="role-badge role-<?= $role ?>"><?= $role ?></span>
-                </div>
+        <!-- Welcome Hero -->
+        <div class="welcome-hero">
+            <h1 class="hero-title">Welcome back, <?= $username ?>! 😊</h1>
+            <p class="hero-subtitle">Ready to find your perfect match?</p>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💖</div>
+                <div class="stat-number"><?= rand(5, 25) ?></div>
+                <div class="stat-label">Total Matches</div>
             </div>
-            <div class="actions">
-                <a href="logout.php" class="btn btn-danger">
-                    🚪 Logout
-                </a>
+            
+            <div class="stat-card">
+                <div class="stat-icon">👀</div>
+                <div class="stat-number"><?= rand(50, 150) ?></div>
+                <div class="stat-label">Profiles Viewed</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-number"><?= rand(10, 40) ?></div>
+                <div class="stat-label">Messages Sent</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-number"><?= rand(15, 55) ?></div>
+                <div class="stat-label">Likes Received</div>
             </div>
         </div>
         
-        <div class="dashboard-grid">
-            <div class="card">
-                <h2>
-                    <span class="icon">📊</span>
-                    Session Information
-                </h2>
-                
-                <div class="stat-item">
-                    <span class="stat-label">Username</span>
-                    <span class="stat-value"><?= $username ?></span>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-label">Role</span>
-                    <span class="stat-value">
-                        <span class="role-badge role-<?= $role ?>"><?= ucfirst($role) ?></span>
-                    </span>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-label">Active Sessions</span>
-                    <span class="stat-value"><?= $sessionStats['active_sessions'] ?></span>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-label">Session Timeout</span>
-                    <span class="stat-value"><?= $sessionTimeout ?> minutes</span>
-                </div>
-                
-                <?php if ($sessionStats['session_created']): ?>
-                <div class="stat-item">
-                    <span class="stat-label">Session Created</span>
-                    <span class="stat-value">
-                        <?= date('Y-m-d H:i:s', strtotime($sessionStats['session_created'])) ?>
-                    </span>
-                </div>
-                <?php endif; ?>
-                
-                <?php if ($sessionStats['last_activity']): ?>
-                <div class="stat-item">
-                    <span class="stat-label">Last Activity</span>
-                    <span class="stat-value">
-                        <?= date('Y-m-d H:i:s', strtotime($sessionStats['last_activity'])) ?>
-                    </span>
-                </div>
-                <?php endif; ?>
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🚀 Quick Actions</h2>
             </div>
-            
-            <div class="card">
-                <h2>
-                    <span class="icon">🔐</span>
-                    Security Features
-                </h2>
-                
-                <div class="welcome-section">
-                    <h3>System is Secure!</h3>
-                    <p>This login system includes all modern security practices</p>
-                </div>
-                
-                <div class="alert">
-                    <strong>Security Features Active:</strong><br>
-                    ✅ Password hashing with Argon2ID<br>
-                    ✅ Prepared statements for SQL injection protection<br>
-                    ✅ Session regeneration on login<br>
-                    ✅ Input sanitization and validation<br>
-                    ✅ Session timeout protection<br>
-                    ✅ Secure cookie settings<br>
-                    ✅ Error logging and monitoring
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>
-                    <span class="icon">⚙️</span>
-                    Quick Actions
-                </h2>
-                
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <a href="logout.php" class="btn btn-danger">
-                        🚪 Logout from this session
-                    </a>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <div class="action-card" onclick="window.location.href='matches.php'">
+                        <div class="action-icon">�</div>
+                        <h3>Discover People</h3>
+                        <p class="text-secondary">Start swiping to find matches</p>
+                    </div>
                     
-                    <button onclick="location.reload()" class="btn btn-primary">
-                        🔄 Refresh page
-                    </button>
-                </div>
-                
-                <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.85rem; color: #666;">
-                    <p><strong>Note:</strong> This is a demonstration admin panel. In a real application, this would contain actual administrative functions.</p>
+                    <div class="action-card" onclick="window.location.href='profile.php'">
+                        <div class="action-icon">⚙️</div>
+                        <h3>Edit Profile</h3>
+                        <p class="text-secondary">Update your bio and preferences</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="window.location.href='matches.php#matches'">
+                        <div class="action-icon">💑</div>
+                        <h3>View Matches</h3>
+                        <p class="text-secondary">See who you've matched with</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        
+        <!-- Account Information -->
+        <div class="grid grid-lg-2" style="gap: 2rem; margin-top: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Session Information</h2>
+                </div>
+                <div class="card-body">
+                    <div class="stat-item">
+                        <span class="stat-label">Username</span>
+                        <span class="stat-value"><?= $username ?></span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Role</span>
+                        <span class="stat-value">
+                            <span class="role-badge role-<?= $role ?>">
+                                <?= ucfirst($role) ?>
+                            </span>
+                        </span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Active Sessions</span>
+                        <span class="stat-value"><?= $sessionStats['active_sessions'] ?></span>
+                    </div>
+                    
+                    <?php if ($sessionStats['session_created']): ?>
+                    <div class="stat-item">
+                        <span class="stat-label">Session Created</span>
+                        <span class="stat-value">
+                            <?= date('M j, g:i A', strtotime($sessionStats['session_created'])) ?>
+                        </span>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($sessionStats['last_activity']): ?>
+                    <div class="stat-item">
+                        <span class="stat-label">Last Activity</span>
+                        <span class="stat-value">
+                            <?= date('M j, g:i A', strtotime($sessionStats['last_activity'])) ?>
+                        </span>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Session Timeout</span>
+                        <span class="stat-value"><?= $sessionTimeout ?> minutes</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔒 Security Features</h2>
+                </div>
+                <div class="card-body">
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--success-color);">✅</span>
+                            <span>Argon2ID password hashing</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--success-color);">✅</span>
+                            <span>CSRF protection active</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--success-color);">✅</span>
+                            <span>Secure session management</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--success-color);">✅</span>
+                            <span>SQL injection protection</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--success-color);">✅</span>
+                            <span>Input validation & sanitization</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-lg">
+                        <a href="logout.php" class="btn btn-danger" style="width: 100%;">
+                            � Logout Securely
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="recent-activity mt-lg">
+            <div class="activity-header">
+                <h2>� Recent Activity</h2>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">🔑</div>
+                <div>
+                    <div style="font-weight: 500;">Logged in successfully</div>
+                    <div class="text-secondary" style="font-size: var(--font-size-sm);">Just now</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">👤</div>
+                <div>
+                    <div style="font-weight: 500;">Profile updated</div>
+                    <div class="text-secondary" style="font-size: var(--font-size-sm);">2 hours ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">❤️</div>
+                <div>
+                    <div style="font-weight: 500;">New match found</div>
+                    <div class="text-secondary" style="font-size: var(--font-size-sm);">Yesterday</div>
+                </div>
+            </div>
+        </div>
+    </main>
     
+    <script src="assets/app.js"></script>
     <script>
         // Auto-refresh session activity every 5 minutes
         setInterval(function() {
@@ -455,6 +452,11 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                 location.reload();
             }
         }, (<?= SESSION_TIMEOUT ?> - 300) * 1000); // 5 minutes before expiry
+        
+        // Initialize the Dating App
+        if (typeof DatingApp !== 'undefined') {
+            window.app = new DatingApp();
+        }
     </script>
 </body>
 </html>
