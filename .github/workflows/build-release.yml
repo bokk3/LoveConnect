@@ -28,7 +28,7 @@ jobs:
       id: docker-build
       uses: michielvha/docker-release-action@main
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
         project: dating-v2
         version: ${{ steps.gitversion.outputs.semver }}
