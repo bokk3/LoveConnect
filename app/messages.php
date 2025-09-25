@@ -67,13 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                 case 'get_messages':
                     $matchId = (int)($_POST['match_id'] ?? 0);
+                    error_log("Getting messages for match ID: " . $matchId);
                     if ($matchId <= 0) {
                         echo json_encode(['success' => false, 'error' => 'Invalid match ID']);
                         exit;
                     }
                     
                     $stmt = $pdo->prepare("
-                        SELECT m.*, u.full_name as sender_name,
+                        SELECT m.*, u.username as sender_name,
                                DATE_FORMAT(m.created_at, '%M %e, %l:%i %p') as formatted_time
                         FROM messages m
                         JOIN users u ON u.id = m.sender_id
@@ -81,7 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ORDER BY m.created_at ASC
                     ");
                     $stmt->execute([$matchId]);
-                    echo json_encode(['success' => true, 'messages' => $stmt->fetchAll()]);
+                    $messages = $stmt->fetchAll();
+                    error_log("Found " . count($messages) . " messages for match " . $matchId);
+                    echo json_encode(['success' => true, 'messages' => $messages]);
                     exit;
                     
                 case 'send_message':
@@ -364,30 +367,51 @@ if ($currentMatchId && $currentMatchId > 0) {
 
         .message {
             max-width: 70%;
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
-            word-wrap: break-word;
-            position: relative;
+            margin-bottom: 0.5rem;
+            display: flex;
+            flex-direction: column;
         }
 
         .message.sent {
             align-self: flex-end;
-            background: var(--primary-pink);
-            color: white;
-            border-bottom-right-radius: 0.5rem;
         }
 
         .message.received {
             align-self: flex-start;
-            background: #f7fafc;
+        }
+
+        .message-content {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .message.sent .message-content {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message.received .message-content {
+            background: #f1f3f4;
             color: var(--text-primary);
-            border-bottom-left-radius: 0.5rem;
+            border-bottom-left-radius: 0.25rem;
         }
 
         .message-time {
             font-size: 0.75rem;
-            opacity: 0.7;
+            color: var(--text-secondary);
             margin-top: 0.25rem;
+            opacity: 0.7;
+        }
+
+        .message.sent .message-time {
+            text-align: right;
+        }
+
+        .message.received .message-time {
+            text-align: left;
         }
 
         .message-input-container {
@@ -620,7 +644,11 @@ if ($currentMatchId && $currentMatchId > 0) {
             }
             
             async loadMessages() {
-                if (!this.currentMatchId || !this.messagesArea) return;
+                console.log('Loading messages for match ID:', this.currentMatchId);
+                if (!this.currentMatchId || !this.messagesArea) {
+                    console.log('No match ID or messages area');
+                    return;
+                }
                 
                 try {
                     const formData = new FormData();
@@ -634,21 +662,41 @@ if ($currentMatchId && $currentMatchId > 0) {
                     });
                     
                     const result = await response.json();
+                    console.log('Messages API response:', result);
                     if (result.success) {
                         this.renderMessages(result.messages);
+                    } else {
+                        console.error('Messages API error:', result.error);
+                        this.messagesArea.innerHTML = '<div style="text-align: center; padding: 2rem; color: #666;">Failed to load messages</div>';
                     }
                 } catch (error) {
                     console.error('Failed to load messages:', error);
+                    this.messagesArea.innerHTML = '<div style="text-align: center; padding: 2rem; color: #666;">Error loading messages</div>';
                 }
             }
             
             renderMessages(messages) {
-                if (!this.messagesArea) return;
+                console.log('Rendering messages:', messages);
+                if (!this.messagesArea) {
+                    console.log('No messages area found');
+                    return;
+                }
+                
+                if (!messages || messages.length === 0) {
+                    this.messagesArea.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">💕</div>
+                            <p>No messages yet</p>
+                            <p style="font-size: 0.875rem;">Start the conversation!</p>
+                        </div>
+                    `;
+                    return;
+                }
                 
                 this.messagesArea.innerHTML = messages.map(msg => `
                     <div class="message ${msg.sender_id == this.currentUserId ? 'sent' : 'received'}">
-                        <div>${this.escapeHtml(msg.message)}</div>
-                        <div class="message-time">${msg.formatted_time}</div>
+                        <div class="message-content">${this.escapeHtml(msg.message)}</div>
+                        <div class="message-time">${msg.formatted_time || new Date(msg.created_at).toLocaleString()}</div>
                     </div>
                 `).join('');
                 
