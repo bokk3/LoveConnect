@@ -4,35 +4,39 @@
 workflow: GitHubFlow/v1
 # Custom strategies - this differs from default
 
-# major-version-bump-message: '(BREAKING CHANGE|^[a-z]+(\([^)]+\))?!: )'
-# minor-version-bump-message: '^feat(\([^)]+\))?: '
-# patch-version-bump-message: '^(fix|perf|refactor|revert)(\([^)]+\))?: '
-# no-bump-message: '^(chore|docs|style|test|ci)(\([^)]+\))?: '
+major-version-bump-message: '(BREAKING CHANGE|^[a-z]+(\([^)]+\))?!: )'
+minor-version-bump-message: '^feat(\([^)]+\))?: '
+patch-version-bump-message: '^(fix|perf|refactor|revert)(\([^)]+\))?: '
+no-bump-message: '^(chore|docs|style|test|ci)(\([^)]+\))?: '
+commit-message-incrementing: MergeMessageOnly # Only commit message is taking into account, history in PR is ignored, seems best for terraform IMO
 
-# strategies:
-#   - MergeMessage
-#   - TaggedCommit
-#   - TrackReleaseBranches
-#   - VersionInBranchName
-# branches:
-#   main:
-#     regex: ^master$|^main$
-#     increment: Patch
-#     prevent-increment:
-#       of-merged-branch: true
-#     track-merge-target: false
-#     track-merge-message: true
-#     is-main-branch: true
-#     mode: ContinuousDeployment # also do it here
-#   release:
-#     # Custom release branch configuration
-#     regex: ^release/(?<BranchName>[0-9]+\.[0-9]+\.[0-9]+)$
-#     label: ''
-#     increment: None
-#     prevent-increment:
-#       when-current-commit-tagged: true
-#       of-merged-branch: true
-#     is-release-branch: true
-#     mode: ContinuousDeployment # do not use ContinuousDelivery, else it will increment the version with a suffix on each commit.
-#     source-branches:
-#       - main
+strategies:
+  - MergeMessage
+  - TaggedCommit
+  - TrackReleaseBranches
+  - VersionInBranchName
+branches:
+  main:
+    regex: ^master$|^main$
+    increment: Patch
+    prevent-increment:
+      of-merged-branch: true
+    track-merge-target: false
+    track-merge-message: true
+    is-main-branch: true
+    mode: ContinuousDeployment # also do it here
+  release:
+    # Custom release branch configuration
+    regex: ^release/(?<BranchName>[0-9]+\.[0-9]+\.[0-9]+)$
+    label: ''
+    increment: None
+    prevent-increment:
+      when-current-commit-tagged: true
+      of-merged-branch: true
+    is-release-branch: true
+    mode: ContinuousDeployment # do not use ContinuousDelivery, else it will increment the version with a suffix on each commit.
+    source-branches:
+      - main
+
+assembly-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{SemVer}'
