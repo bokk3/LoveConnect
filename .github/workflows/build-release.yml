@@ -1,0 +1,32 @@
+name: Build & Release Docker Image
+
+permissions:
+  id-token: write
+  contents: write
+
+on:
+#   push:
+#     branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Step
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Tag the repo
+      id: gitversion
+      uses: michielvha/gitversion-tag-action@main
+      with:
+        configFilePath: gitversion.yml
+    - name: Build and Push Docker Image
+      id: docker-build
+      uses: michielvha/docker-release-action@main
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        project: dating-v2
+        version: ${{ steps.gitversion.outputs.semver }}
