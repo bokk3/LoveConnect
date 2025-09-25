@@ -638,16 +638,136 @@ p {
   .grid-xl-5 { grid-template-columns: repeat(5, 1fr); }
 }
 
-/* Dark mode support (future enhancement) */
+/* Dark mode support with enhanced readability */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: #1a1a1a;
-    --surface-color: #2c2c2c;
+    /* Enhanced dark background colors */
+    --bg-color: #121212;
+    --surface-color: #1e1e1e;
     --text-primary: #ffffff;
-    --text-secondary: #b3b3b3;
-    --text-light: #666666;
-    --border-color: #404040;
-    --border-hover: #525252;
+    --text-secondary: #e0e0e0;
+    --text-light: #b0b0b0;
+    --border-color: #333333;
+    --border-hover: #444444;
+    
+    /* Dark mode specific gradients */
+    --gradient-card: linear-gradient(145deg, #1e1e1e 0%, #2a2a2a 100%);
+    --gradient-overlay: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+  }
+  
+  /* Enhanced form readability */
+  .form-group label {
+    color: #ffffff !important;
+    font-weight: 500;
+  }
+  
+  .form-input, .form-textarea, .form-select {
+    background: #2a2a2a !important;
+    border: 1px solid #444444 !important;
+    color: #ffffff !important;
+  }
+  
+  .form-input::placeholder, .form-textarea::placeholder {
+    color: #888888 !important;
+  }
+  
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 122, 0.1) !important;
+  }
+  
+  /* Better section headers */
+  .section-title, h1, h2, h3 {
+    color: #ffffff !important;
+  }
+  
+  /* Enhanced cards */
+  .card, .profile-card {
+    background: #1e1e1e !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* Better interest tags */
+  .interest-tag {
+    background: rgba(255, 107, 122, 0.15) !important;
+    color: #ff8a94 !important;
+    border: 1px solid rgba(255, 107, 122, 0.3) !important;
+  }
+  
+  .interest-tag.selected {
+    background: var(--primary-color) !important;
+    color: white !important;
+  }
+  
+  /* Enhanced checkbox/radio visibility */
+  input[type="checkbox"], input[type="radio"] {
+    accent-color: var(--primary-color);
+  }
+  
+  /* Better navigation */
+  .nav-link {
+    color: #e0e0e0 !important;
+  }
+  
+  .nav-link.active {
+    color: var(--primary-color) !important;
+  }
+  
+  /* Dating Preferences specific improvements */
+  .checkbox-group label, .radio-group label {
+    color: #ffffff !important;
+    font-weight: 400;
+  }
+  
+  .checkbox-group input[type="checkbox"]:checked + label,
+  .radio-group input[type="radio"]:checked + label {
+    color: var(--primary-light) !important;
+    font-weight: 500;
+  }
+  
+  /* Better spacing for form sections */
+  .form-section {
+    background: rgba(30, 30, 30, 0.8) !important;
+    border: 1px solid #333333 !important;
+    border-radius: var(--border-radius-lg) !important;
+    padding: var(--spacing-lg) !important;
+    margin-bottom: var(--spacing-lg) !important;
+  }
+  
+  /* Enhanced button visibility */
+  .btn-secondary {
+    background: #333333 !important;
+    color: #ffffff !important;
+    border: 1px solid #444444 !important;
+  }
+  
+  .btn-secondary:hover {
+    background: #404040 !important;
+    border-color: #555555 !important;
+  }
+  
+  /* Ensure all text is readable */
+  p, span, div, li {
+    color: #e0e0e0;
+  }
+  
+  /* Strong contrast for important text */
+  .profile-info strong, .form-help, .text-muted {
+    color: #b0b0b0 !important;
+  }
+  
+  /* Better visibility for placeholders and hints */
+  .text-sm, .form-text {
+    color: #a0a0a0 !important;
+  }
+  
+  /* Enhanced hover states for interactive elements */
+  .interest-tag:hover {
+    background: rgba(255, 107, 122, 0.25) !important;
+    border-color: rgba(255, 107, 122, 0.5) !important;
+    transform: translateY(-1px);
+    transition: all var(--transition-fast);
   }
 }
 
