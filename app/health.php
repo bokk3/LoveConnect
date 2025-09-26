@@ -10,10 +10,10 @@ $health = [
 
 // Check database connection
 try {
-    $db_host = $_ENV['DB_HOST'] ?? 'localhost';
-    $db_name = $_ENV['DB_NAME'] ?? 'login_system';
-    $db_user = $_ENV['DB_USER'] ?? 'root';
-    $db_pass = $_ENV['DB_PASS'] ?? 'rootpassword';
+    $db_host = getenv('DB_HOST') ?: 'localhost';
+    $db_name = getenv('DB_NAME') ?: 'login_system';
+    $db_user = getenv('DB_USER') ?: 'root';
+    $db_pass = getenv('DB_PASS') ?: 'rootpassword';
     
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

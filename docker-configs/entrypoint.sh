@@ -20,8 +20,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing MariaDB..."
     mysql_install_db --user=mysql --datadir=/var/lib/mysql --auth-root-authentication-method=normal
     
-    # Start MySQL temporarily
-    mysqld_safe --datadir=/var/lib/mysql --user=mysql &
+    # Start MySQL temporarily with skip-grant-tables for initial setup
+    mysqld_safe --datadir=/var/lib/mysql --user=mysql --skip-grant-tables &
     MYSQL_PID=$!
     
     # Wait for MySQL to be ready
@@ -45,12 +45,12 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     fi
     
     echo "Setting up database and user..."
-    # Set up database and user using environment variables
+    # First flush privileges to enable grant tables
+    mysql -e "FLUSH PRIVILEGES;"
+    # Create database and set root password
     mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-    mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';"
-    mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%';"
-    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
+    mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('${DB_PASS}');"
+    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO 'root'@'%' IDENTIFIED BY '${DB_PASS}';"
     mysql -e "FLUSH PRIVILEGES;"
     
     # Import schema if it exists
@@ -61,8 +61,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     
     # Stop temporary MySQL
     echo "Database initialization complete. Stopping temporary MySQL..."
-    kill $MYSQL_PID
-    wait $MYSQL_PID
+    mysqladmin shutdown -h localhost
+    sleep 5
 else
     echo "Database already initialized"
 fi

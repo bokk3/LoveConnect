@@ -5,10 +5,10 @@
  */
 
 // Database configuration
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'mariadb');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'login_system');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? 'rootpassword');
+define('DB_HOST', getenv('DB_HOST') ?: 'mariadb');
+define('DB_NAME', getenv('DB_NAME') ?: 'login_system');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: 'rootpassword');
 define('DB_CHARSET', 'utf8mb4');
 
 // Session configuration

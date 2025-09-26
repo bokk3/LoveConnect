@@ -123,8 +123,8 @@ function processLogin(): string {
         
         <div style="margin-top: 1rem; padding: 1rem; background: rgba(255, 107, 122, 0.1); border-radius: 8px;">
             <p><strong>Demo Accounts:</strong></p>
-            <p>Username: <code>admin</code> / Password: <code>password123</code></p>
-            <p>Username: <code>alex_tech</code> / Password: <code>password123</code></p>
+            <p>Username: <code>admin</code> / Password: <code>admin123</code></p>
+            <p>Username: <code>alex_tech</code> / Password: <code>editor123</code></p>
         </div>
         
         <div style="text-align: center; margin-top: 1rem;">
