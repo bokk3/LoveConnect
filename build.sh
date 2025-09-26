@@ -16,6 +16,24 @@ IMAGE_NAME="loveconnect-app"
 CONTAINER_NAME="loveconnect-container"
 TAG=${1:-latest}
 
+# Security check for .env file
+if [ ! -f ".env" ]; then
+    echo -e "${RED}❌ ERROR: .env file not found!${NC}"
+    echo -e "${YELLOW}Please copy .env.example to .env and configure your environment variables:${NC}"
+    echo "cp .env.example .env"
+    echo "# Then edit .env with your secure passwords and configuration"
+    exit 1
+fi
+
+# Check for default passwords
+if grep -q "CHANGE_THIS" .env || grep -q "rootpassword" .env; then
+    echo -e "${RED}❌ SECURITY WARNING: Default passwords detected in .env file!${NC}"
+    echo -e "${YELLOW}Please change all default passwords before building:${NC}"
+    grep -n "CHANGE_THIS\|rootpassword" .env || true
+    echo -e "${YELLOW}Edit your .env file and replace all default values.${NC}"
+    exit 1
+fi
+
 echo -e "${YELLOW}Building Docker image: ${IMAGE_NAME}:${TAG}${NC}"
 
 # Build the Docker image

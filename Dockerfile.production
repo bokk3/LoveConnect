@@ -192,6 +192,12 @@ COPY <<EOF /docker-entrypoint.sh
 #!/bin/sh
 set -e
 
+# Validate required environment variables
+if [ -z "\$DB_PASS" ]; then
+    echo "ERROR: DB_PASS environment variable is required"
+    exit 1
+fi
+
 # Initialize MySQL data directory if it doesn't exist
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing MariaDB..."
@@ -199,24 +205,35 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     
     # Start MySQL temporarily
     mysqld_safe --datadir=/var/lib/mysql --user=mysql &
-    MYSQL_PID=$!
+    MYSQL_PID=\$!
     
     # Wait for MySQL to be ready
-    sleep 10
+    echo "Waiting for MySQL to start..."
+    sleep 15
     
-    # Set up database and user
-    mysql -e "CREATE DATABASE IF NOT EXISTS \${DB_NAME:-login_system};"
-    mysql -e "CREATE USER IF NOT EXISTS '\${DB_USER:-root}'@'%' IDENTIFIED BY '\${DB_PASS:-rootpassword}';"
-    mysql -e "GRANT ALL PRIVILEGES ON \${DB_NAME:-login_system}.* TO '\${DB_USER:-root}'@'%';"
+    # Test connection before proceeding
+    while ! mysqladmin ping -h localhost --silent; do
+        echo "Waiting for MySQL to be ready..."
+        sleep 2
+    done
+    
+    echo "Setting up database and user..."
+    # Set up database and user using environment variables
+    mysql -e "CREATE DATABASE IF NOT EXISTS \`\${DB_NAME}\`;"
+    mysql -e "CREATE USER IF NOT EXISTS '\${DB_USER}'@'%' IDENTIFIED BY '\${DB_PASS}';"
+    mysql -e "CREATE USER IF NOT EXISTS '\${DB_USER}'@'localhost' IDENTIFIED BY '\${DB_PASS}';"
+    mysql -e "GRANT ALL PRIVILEGES ON \`\${DB_NAME}\`.* TO '\${DB_USER}'@'%';"
+    mysql -e "GRANT ALL PRIVILEGES ON \`\${DB_NAME}\`.* TO '\${DB_USER}'@'localhost';"
     mysql -e "FLUSH PRIVILEGES;"
     
     # Import schema if it exists
     if [ -f "/var/www/html/schema.sql" ]; then
         echo "Importing database schema..."
-        mysql "\${DB_NAME:-login_system}" < /var/www/html/schema.sql
+        mysql "\${DB_NAME}" < /var/www/html/schema.sql
     fi
     
     # Stop temporary MySQL
+    echo "Database initialization complete. Stopping temporary MySQL..."
     kill \$MYSQL_PID
     wait \$MYSQL_PID
 fi
@@ -240,13 +257,15 @@ RUN chown -R nginx:nginx /var/www/html \
 # Expose ports
 EXPOSE 80 3306
 
-# Environment variables
+# Environment variables (defaults only - override with --env or env_file)
 ENV DB_HOST=localhost
 ENV DB_NAME=login_system
 ENV DB_USER=root
-ENV DB_PASS=rootpassword
+ENV DB_PASS=""
 ENV PHP_MEMORY_LIMIT=256M
 ENV PHP_MAX_EXECUTION_TIME=30
+ENV APP_ENV=production
+ENV APP_DEBUG=false
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
