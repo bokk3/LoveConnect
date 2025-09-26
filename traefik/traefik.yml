@@ -1,0 +1,64 @@
+# Traefik static configuration
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: false  # Disable for production
+  debug: false
+
+# Certificate Resolvers
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: your-email@domain.com  # Change this to your email
+      storage: /certs/acme.json
+      httpChallenge:
+        entryPoint: web
+      # Use DNS challenge if you prefer (more reliable for wildcards)
+      # dnsChallenge:
+      #   provider: cloudflare
+      #   delayBeforeCheck: 0
+
+# Entry Points
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entrypoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+  traefik:
+    address: ":8080"
+
+# Providers
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: loveconnect-network
+  file:
+    filename: /config/dynamic.yml
+    watch: true
+
+# Metrics for Prometheus
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    addRoutersLabels: true
+
+# Logging
+log:
+  level: INFO
+
+accessLog:
+  format: json

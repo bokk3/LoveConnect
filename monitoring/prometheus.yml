@@ -1,0 +1,42 @@
+# Prometheus configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Traefik metrics
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8080']
+    metrics_path: '/metrics'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # MariaDB metrics (if you add mysqld_exporter)
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['db:9104']
+    scrape_interval: 30s
+
+  # Application metrics (if you add them to your PHP app)
+  - job_name: 'loveconnect-app'
+    static_configs:
+      - targets: ['app:9000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s

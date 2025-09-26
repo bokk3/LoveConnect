@@ -1,0 +1,180 @@
+# HOMELAB BEAST MODE - Production Docker Compose
+# Self-hosted dating app with monitoring, SSL, and Cloudflare tunnels
+version: '3.8'
+
+services:
+  # Traefik Reverse Proxy with SSL
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/etc/traefik
+      - traefik-certs:/certs
+    environment:
+      - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=cloudflare"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+    networks:
+      - homelab
+
+  # Your Dating App - Production Ready
+  loveconnect:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: loveconnect-app
+    restart: unless-stopped
+    environment:
+      - DB_HOST=mariadb
+      - DB_NAME=login_system
+      - DB_USER=loveconnect_user
+      - DB_PASS=${DB_PASSWORD}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://dating.${DOMAIN}
+    depends_on:
+      - mariadb
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.loveconnect.rule=Host(`dating.${DOMAIN}`)"
+      - "traefik.http.routers.loveconnect.tls=true"
+      - "traefik.http.routers.loveconnect.tls.certresolver=cloudflare"
+      - "traefik.http.services.loveconnect.loadbalancer.server.port=80"
+    volumes:
+      - loveconnect-uploads:/var/www/html/uploads
+    networks:
+      - homelab
+
+  # MariaDB Database with Performance Tuning
+  mariadb:
+    image: mariadb:10.11
+    container_name: loveconnect-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: login_system
+      MYSQL_USER: loveconnect_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./config/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --max-connections=100
+      --innodb-log-file-size=64M
+    networks:
+      - homelab
+
+  # Redis for Sessions and Caching
+  redis:
+    image: redis:7-alpine
+    container_name: loveconnect-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - homelab
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`metrics.${DOMAIN}`)"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.http.routers.prometheus.tls.certresolver=cloudflare"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+    networks:
+      - homelab
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SERVER_DOMAIN=dashboard.${DOMAIN}
+      - GF_SERVER_ROOT_URL=https://dashboard.${DOMAIN}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`dashboard.${DOMAIN}`)"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=cloudflare"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    networks:
+      - homelab
+
+  # Auto-update containers
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 2 * * * # 2 AM daily
+      - WATCHTOWER_NOTIFICATIONS=email
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${NOTIFICATION_EMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${NOTIFICATION_EMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=${SMTP_SERVER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${SMTP_USER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${SMTP_PASSWORD}
+    networks:
+      - homelab
+
+  # Cloudflare Tunnel (replaces port forwarding)
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: false
+    name: homelab
+
+volumes:
+  mariadb-data:
+    name: loveconnect-mariadb-data
+  redis-data:
+    name: loveconnect-redis-data
+  loveconnect-uploads:
+    name: loveconnect-uploads
+  prometheus-data:
+    name: prometheus-data
+  grafana-data:
+    name: grafana-data
+  traefik-certs:
+    name: traefik-certs
