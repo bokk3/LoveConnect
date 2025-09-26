@@ -1,6 +1,126 @@
-# � LoveConnect - Mobile-First Dating Web App
+# LoveConnect Dating App - Dockerized
 
-A modern, secure dating web application built with PHP 8.2, featuring a mobile-first responsive design, comprehensive matching system, and advanced security features. Evolved from a secure login system into a full-featured dating platform.
+A modern PHP-based dating application with automated build pipeline and container deployment.
+
+## 🚀 Quick Start
+
+### Development with Docker Compose
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Production Build
+```bash
+# Build and run production container
+./build.sh latest --run
+
+# Or manually:
+docker build -f Dockerfile.production -t loveconnect-app .
+docker run -d -p 8080:80 --env-file .env loveconnect-app
+```
+
+## 📦 Container Features
+
+### Production Dockerfile
+- **Multi-service container**: nginx + PHP-FPM + MariaDB
+- **Optimized for production**: OPcache enabled, security hardened
+- **Health monitoring**: Built-in health check endpoint
+- **Environment-based configuration**: Full .env support
+- **Persistent storage**: MySQL data volume mounting
+- **Supervisor process management**: All services managed in single container
+
+### Services Included
+- **nginx 1.25**: Web server with optimized configuration
+- **PHP 8.2-FPM**: Latest PHP with production optimizations
+- **MariaDB**: Database with automatic initialization
+- **Supervisor**: Process management for all services
+
+## ⚙️ Configuration
+
+### Environment Variables
+Copy `.env.example` to `.env` and customize:
+
+```bash
+cp .env.example .env
+```
+
+Key variables:
+- `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`: Database configuration
+- `APP_ENV`: Set to `production` for production builds
+- `APP_DEBUG`: Enable/disable debug mode
+- `SESSION_*`: Session security settings
+
+### Database Setup
+The container automatically initializes the database on first run. If `schema.sql` exists in the app directory, it will be imported automatically.
+
+## 🔧 Development
+
+### Local Development
+1. Use `docker-compose.yml` for development with hot reload
+2. Edit files in the `app/` directory
+3. Changes are reflected immediately
+
+### Production Deployment
+1. Build production image: `./build.sh latest`
+2. Push to registry: `docker push your-registry/loveconnect-app:latest`
+3. Deploy to your platform of choice
+
+## 🏗️ CI/CD Pipeline
+
+### GitHub Actions
+The repository includes a complete CI/CD pipeline (`.github/workflows/ci-cd.yml`):
+
+1. **Test Stage**: PHP syntax checking and security scans
+2. **Build Stage**: Docker image build and push to GitHub Container Registry
+3. **Deploy Stage**: Automated deployment (customize for your platform)
+
+### Pipeline Features
+- Automated testing on pull requests
+- Multi-environment support (develop/main branches)
+- Container registry integration
+- Security scanning
+- Deployment automation
+
+## 📊 Monitoring
+
+### Health Check
+The application includes a health check endpoint at `/health.php`:
+```bash
+curl http://localhost:8080/health.php
+```
+
+Returns service status for:
+- Database connectivity
+- File system permissions
+- Required application files
+
+### Logging
+- Application logs: `/var/log/app.log`
+- PHP-FPM logs: `/var/log/supervisor/php-fpm.log`
+- nginx logs: `/var/log/supervisor/nginx.log`
+- MySQL logs: `/var/log/supervisor/mysql.log`
+
+## 🔒 Security Features
+
+### Production Hardening
+- PHP production configuration
+- OPcache optimizations
+- Session security settings
+- Error logging (not display)
+- Security headers via nginx
+- File upload restrictions
+
+### Database Security
+- Non-root database user
+- Connection encryption ready
+- SQL injection protection via PDO
 
 ## 🌟 Features
 

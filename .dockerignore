@@ -1,0 +1,78 @@
+# .dockerignore - Files to exclude from Docker build context
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Development files
+.env.example
+docker-compose.yml
+docker-compose.prod.yml
+
+# Build artifacts
+build.sh
+.github/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.cache
+logs/
+tmp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Composer (if using)
+vendor/
+composer.lock
+
+# Test files
+tests/
+phpunit.xml
+*.test.php
+
+# Development databases
+*.sqlite
+*.db
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# SSL certificates (should be mounted)
+ssl/
+*.pem
+*.crt
+*.key
+
+# Environment files (should be passed via env_file)
+.env
+.env.local
+.env.production
+
+# Application specific
+cookies.txt
+debug.log
