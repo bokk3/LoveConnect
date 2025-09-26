@@ -68,6 +68,14 @@ function processLogin(): string {
             align-items: center;
             justify-content: center;
             padding: var(--spacing-lg);
+            position: relative;
+        }
+        
+        .theme-toggle-login {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
         }
         
         .simple-login-container {
@@ -95,6 +103,14 @@ function processLogin(): string {
     </style>
 </head>
 <body class="simple-login-page">
+    <!-- Theme toggle for testing -->
+    <div class="theme-toggle-login">
+        <div style="color: white; font-size: 12px; margin-bottom: 5px; text-align: center;">Theme</div>
+        <button type="button" class="theme-toggle" aria-label="Toggle dark mode" title="Click to toggle between light and dark theme">
+            <div class="theme-toggle-slider"></div>
+        </button>
+    </div>
+    
     <div class="simple-login-container">
         <div class="simple-login-header">
             <h1>💕 LoveConnect</h1>
@@ -131,5 +147,7 @@ function processLogin(): string {
             <a href="login.php" class="btn btn-secondary">Back to Full Login Page</a>
         </div>
     </div>
+    
+    <script src="assets/app.js"></script>
 </body>
 </html>

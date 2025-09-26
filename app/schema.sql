@@ -27,6 +27,9 @@ CREATE TABLE users (
     age_max INT UNSIGNED DEFAULT 100,
     max_distance INT UNSIGNED DEFAULT 50, -- km
     
+    -- UI preferences
+    dark_mode BOOLEAN DEFAULT FALSE,
+    
     -- Account status
     is_active BOOLEAN DEFAULT TRUE,
     is_verified BOOLEAN DEFAULT FALSE,

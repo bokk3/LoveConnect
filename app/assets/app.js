@@ -13,6 +13,124 @@ const API_CONFIG = {
   }
 };
 
+// Theme Management Module
+const ThemeManager = {
+  /**
+   * Initialize theme on page load
+   */
+  init() {
+    // Force remove any existing theme classes first
+    document.documentElement.classList.remove('dark-theme', 'light-theme');
+    
+    this.loadUserTheme();
+    this.initializeToggle();
+  },
+
+  /**
+   * Load user's theme preference
+   */
+  loadUserTheme() {
+    // Always start with light theme (white background) as default
+    this.setTheme('light');
+    
+    // Then check for saved theme preference
+    const savedTheme = localStorage.getItem('theme-preference');
+    if (savedTheme && savedTheme === 'dark') {
+      this.setTheme('dark');
+    }
+  },
+
+  /**
+   * Set theme and update UI
+   * @param {string} theme - 'light' or 'dark'
+   */
+  setTheme(theme) {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.remove('light-theme');
+      root.classList.add('dark-theme');
+    } else {
+      root.classList.remove('dark-theme');
+      root.classList.add('light-theme');
+    }
+    
+    // Save preference locally
+    localStorage.setItem('theme-preference', theme);
+    
+    // Update toggle button state
+    this.updateToggleButton(theme);
+  },
+
+  /**
+   * Toggle between light and dark themes
+   */
+  toggleTheme() {
+    const root = document.documentElement;
+    const currentTheme = root.classList.contains('dark-theme') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    this.setTheme(newTheme);
+    this.saveUserThemePreference(newTheme);
+  },
+
+  /**
+   * Update toggle button appearance
+   * @param {string} theme - Current theme
+   */
+  updateToggleButton(theme) {
+    const toggles = document.querySelectorAll('.theme-toggle');
+    toggles.forEach(toggle => {
+      const slider = toggle.querySelector('.theme-toggle-slider');
+      if (slider) {
+        if (theme === 'dark') {
+          toggle.setAttribute('aria-label', 'Switch to light mode');
+          toggle.setAttribute('title', 'Switch to light mode');
+        } else {
+          toggle.setAttribute('aria-label', 'Switch to dark mode');
+          toggle.setAttribute('title', 'Switch to dark mode');
+        }
+      }
+    });
+  },
+
+  /**
+   * Initialize theme toggle buttons
+   */
+  initializeToggle() {
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.theme-toggle')) {
+        e.preventDefault();
+        this.toggleTheme();
+      }
+    });
+  },
+
+  /**
+   * Save theme preference to server
+   * @param {string} theme - Theme preference
+   */
+  async saveUserThemePreference(theme) {
+    try {
+      const formData = new FormData();
+      formData.append('action', 'update_theme');
+      formData.append('theme', theme);
+      formData.append('csrf_token', Utils.getCSRFToken());
+
+      const response = await fetch('/app/profile.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to save theme preference to server');
+      }
+    } catch (error) {
+      console.warn('Error saving theme preference:', error);
+    }
+  }
+};
+
 // Utility Functions Module
 const Utils = {
   /**
@@ -828,6 +946,7 @@ const ProfileManager = {
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+  ThemeManager.init();
   DatingApp.init();
 });
 
@@ -838,4 +957,5 @@ window.Http = Http;
 window.Flash = Flash;
 window.FormHandler = FormHandler;
 window.SwipeHandler = SwipeHandler;
+window.ThemeManager = ThemeManager;
 window.ProfileManager = ProfileManager;

@@ -99,12 +99,24 @@ function getUserSessionStats(): array {
     }
 }
 
+// Get user data for theme preference
+$currentUser = null;
+try {
+    $pdo = getDbConnection();
+    $stmt = $pdo->prepare('SELECT dark_mode FROM users WHERE id = ?');
+    $stmt->execute([$_SESSION['user_id']]);
+    $currentUser = $stmt->fetch();
+} catch (Exception $e) {
+    error_log("User load error: " . $e->getMessage());
+    $currentUser = ['dark_mode' => false];
+}
+
 $sessionStats = getUserSessionStats();
 $username = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
 $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"<?php if (isset($currentUser['dark_mode']) && $currentUser['dark_mode']): ?> class="dark-theme"<?php endif; ?>>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -249,6 +261,11 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                     <li><a href="profile.php" class="nav-link">Profile</a></li>
                     <li><a href="messages.php" class="nav-link">Messages</a></li>
                     <li><a href="logout.php" class="nav-link">Logout</a></li>
+                    <li class="theme-toggle-container">
+                        <button type="button" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
+                            <div class="theme-toggle-slider"></div>
+                        </button>
+                    </li>
                 </ul>
             </nav>
         </div>

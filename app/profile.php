@@ -43,6 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             case 'update_preferences':
                 $error = updateUserPreferences();
                 break;
+            case 'update_theme':
+                $error = updateUserTheme();
+                break;
         }
         
         if (empty($error)) {
@@ -167,13 +170,62 @@ function updateUserPreferences(): string {
     }
 }
 
+/**
+ * Update user theme preference
+ * @return string Error message or empty string on success
+ */
+function updateUserTheme(): string {
+    try {
+        $theme = $_POST['theme'] ?? '';
+        
+        // Validation
+        if (!in_array($theme, ['light', 'dark'])) {
+            return 'Invalid theme selection.';
+        }
+        
+        $darkMode = ($theme === 'dark') ? 1 : 0;
+        
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare('
+            UPDATE users 
+            SET dark_mode = ?, updated_at = NOW()
+            WHERE id = ?
+        ');
+        
+        $stmt->execute([
+            $darkMode,
+            $_SESSION['user_id']
+        ]);
+        
+        // Return JSON response for AJAX calls
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Theme updated successfully']);
+            exit;
+        }
+        
+        return '';
+    } catch (Exception $e) {
+        error_log("Theme update error: " . $e->getMessage());
+        
+        // Return JSON response for AJAX calls
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Failed to update theme']);
+            exit;
+        }
+        
+        return 'Failed to update theme. Please try again.';
+    }
+}
+
 // Parse user data for display
 $userInterests = json_decode($currentUser['interests'] ?? '[]', true) ?: [];
 $userLookingFor = json_decode($currentUser['looking_for'] ?? '[]', true) ?: [];
 $csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"<?php if (isset($currentUser['dark_mode']) && $currentUser['dark_mode']): ?> class="dark-theme"<?php endif; ?>>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -193,6 +245,11 @@ $csrfToken = generateCSRFToken();
                     <li><a href="profile.php" class="nav-link active">Profile</a></li>
                     <li><a href="messages.php" class="nav-link">Messages</a></li>
                     <li><a href="logout.php" class="nav-link">Logout</a></li>
+                    <li class="theme-toggle-container">
+                        <button type="button" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
+                            <div class="theme-toggle-slider"></div>
+                        </button>
+                    </li>
                 </ul>
             </nav>
         </div>
