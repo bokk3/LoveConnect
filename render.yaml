@@ -1,0 +1,12 @@
+services:
+  # Web Service
+  - type: web
+    name: loveconnect-app
+    env: docker
+    dockerfilePath: ./Dockerfile.render
+    
+  # PostgreSQL Database  
+  - type: pserv
+    name: loveconnect-db
+    env: postgresql
+    plan: free
