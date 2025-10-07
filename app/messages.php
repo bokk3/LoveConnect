@@ -248,31 +248,36 @@ if ($currentMatchId && $currentMatchId > 0) {
 
         .messages-container {
             max-width: 1200px;
-            margin: 2rem auto;
-            background: var(--surface);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+            margin: 1rem auto;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+            border: 2px solid rgba(255, 107, 157, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.15);
             display: grid;
-            grid-template-columns: 350px 1fr;
-            height: calc(100vh - 200px);
+            grid-template-columns: 320px 1fr;
+            height: calc(100vh - 180px);
             overflow: hidden;
+            backdrop-filter: blur(10px);
         }
 
         .conversations-panel {
-            border-right: 1px solid var(--border);
-            background: var(--surface);
+            border-right: 2px solid rgba(255, 107, 157, 0.1);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+            backdrop-filter: blur(5px);
         }
 
         .conversations-header {
             padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(135deg, var(--primary-pink), var(--primary-pink-dark));
+            border-bottom: 2px solid rgba(255, 107, 157, 0.1);
+            background: linear-gradient(135deg, #ff6b9d, #ff8fb3);
             color: white;
+            text-align: center;
         }
 
         .conversations-header h2 {
             margin: 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
         }
 
         .conversations-list {
@@ -281,22 +286,29 @@ if ($currentMatchId && $currentMatchId > 0) {
         }
 
         .conversation-item {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 107, 157, 0.1);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin: 0 0.5rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
         }
 
         .conversation-item:hover {
-            background: #f7fafc;
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(168, 230, 207, 0.1));
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.1);
         }
 
         .conversation-item.active {
-            background: var(--primary-pink);
+            background: linear-gradient(135deg, #ff6b9d, #ff8fb3);
             color: white;
+            transform: translateX(8px);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.3);
         }
 
         .conversation-info {
@@ -346,13 +358,15 @@ if ($currentMatchId && $currentMatchId > 0) {
 
         .chat-header {
             padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface);
+            border-bottom: 2px solid rgba(255, 107, 157, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(10px);
         }
 
         .chat-partner-info h3 {
             margin: 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
             color: var(--text-primary);
         }
 
@@ -366,58 +380,81 @@ if ($currentMatchId && $currentMatchId > 0) {
         }
 
         .message {
-            max-width: 70%;
-            margin-bottom: 0.5rem;
+            max-width: 75%;
+            margin-bottom: 1rem;
             display: flex;
             flex-direction: column;
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.sent {
             align-self: flex-end;
+            align-items: flex-end;
         }
 
         .message.received {
             align-self: flex-start;
+            align-items: flex-start;
         }
 
         .message-content {
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
             word-wrap: break-word;
-            line-height: 1.4;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            position: relative;
         }
 
         .message.sent .message-content {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #ff6b9d, #ff8fb3);
             color: white;
-            border-bottom-right-radius: 0.25rem;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 3px 10px rgba(255, 107, 157, 0.3);
         }
 
         .message.received .message-content {
-            background: #f1f3f4;
+            background: linear-gradient(135deg, rgba(168, 230, 207, 0.2), rgba(255, 255, 255, 0.9));
+            border: 1px solid rgba(168, 230, 207, 0.3);
             color: var(--text-primary);
-            border-bottom-left-radius: 0.25rem;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .message-time {
             font-size: 0.75rem;
             color: var(--text-secondary);
-            margin-top: 0.25rem;
+            margin-top: 0.5rem;
             opacity: 0.7;
+            font-weight: 500;
         }
 
         .message.sent .message-time {
             text-align: right;
+            color: rgba(255, 107, 157, 0.8);
         }
 
         .message.received .message-time {
             text-align: left;
+            color: var(--text-secondary);
         }
 
         .message-input-container {
-            padding: 1rem;
-            border-top: 1px solid var(--border);
-            background: var(--surface);
+            padding: 1.5rem;
+            border-top: 2px solid rgba(255, 107, 157, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(10px);
         }
 
         .message-form {
@@ -428,39 +465,43 @@ if ($currentMatchId && $currentMatchId > 0) {
 
         .message-input {
             flex: 1;
-            padding: 0.75rem 1rem;
-            border: 2px solid var(--border);
-            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(255, 107, 157, 0.2);
+            border-radius: 25px;
             resize: none;
             min-height: 20px;
             max-height: 100px;
             font-family: inherit;
             font-size: 1rem;
-            transition: border-color 0.2s;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
         }
 
         .message-input:focus {
             outline: none;
-            border-color: var(--primary-pink);
+            border-color: #ff6b9d;
+            box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .send-button {
-            background: var(--primary-pink);
+            background: linear-gradient(135deg, #ff6b9d, #ff8fb3);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
         }
 
         .send-button:hover {
-            background: var(--primary-pink-dark);
-            transform: scale(1.05);
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
         }
 
         .send-button:disabled {
@@ -484,14 +525,64 @@ if ($currentMatchId && $currentMatchId > 0) {
             opacity: 0.5;
         }
 
+        .messages-area {
+            padding: 1.5rem;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+        }
+
+        .partner-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .last-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 180px;
+            opacity: 0.8;
+        }
+
+        .conversation-item.active .last-message {
+            color: rgba(255, 255, 255, 0.9);
+            opacity: 1;
+        }
+
+        .unread-badge {
+            background: linear-gradient(135deg, #ff6b9d, #ff8fb3);
+            color: white;
+            border-radius: 50%;
+            min-width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(255, 107, 157, 0.4);
+        }
+
+        .conversation-item.active .unread-badge {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
         @media (max-width: 768px) {
             .messages-container {
                 grid-template-columns: 1fr;
-                margin: 1rem;
+                margin: 0.5rem;
+                height: calc(100vh - 140px);
             }
             
             .conversations-panel {
                 display: none;
+            }
+            
+            .message-input-container {
+                padding: 1rem;
             }
         }
         
@@ -554,8 +645,18 @@ if ($currentMatchId && $currentMatchId > 0) {
         <section class="chat-panel">
             <?php if ($currentConversation): ?>
                 <div class="chat-header">
-                    <div class="chat-partner-info">
-                        <h3><?= htmlspecialchars($currentConversation['partner_name']) ?></h3>
+                    <div class="chat-partner-info" style="display: flex; align-items: center; gap: 1rem;">
+                        <?php 
+                        // Generate consistent placeholder avatar based on match_id
+                        $seed = $currentConversation['match_id'] * 789 + 123;
+                        $avatarUrl = "https://picsum.photos/seed/{$seed}/100/100";
+                        ?>
+                        <img src="<?= $avatarUrl ?>" alt="<?= htmlspecialchars($currentConversation['partner_name']) ?>" 
+                             style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255, 107, 157, 0.3);">
+                        <div>
+                            <h3 style="margin: 0; color: var(--text-primary);"><?= htmlspecialchars($currentConversation['partner_name']) ?></h3>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">💚 Online</p>
+                        </div>
                     </div>
                 </div>
                 
@@ -659,16 +760,26 @@ if ($currentMatchId && $currentMatchId > 0) {
                     return;
                 }
                 
-                this.conversationsList.innerHTML = conversations.map(conv => `
+                this.conversationsList.innerHTML = conversations.map(conv => {
+                    // Generate consistent placeholder avatar based on match_id
+                    const seed = conv.match_id * 789 + 123;
+                    const avatarUrl = `https://picsum.photos/seed/${seed}/100/100`;
+                    
+                    return `
                     <div class="conversation-item ${conv.match_id == this.currentMatchId ? 'active' : ''}" 
                          onclick="window.location.href='messages.php?match=${conv.match_id}'">
-                        <div class="conversation-info">
-                            <div class="partner-name">${this.escapeHtml(conv.partner_name)}</div>
-                            <div class="last-message">${this.escapeHtml(conv.last_message || 'Say hello! 👋')}</div>
+                        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                            <img src="${avatarUrl}" alt="${this.escapeHtml(conv.partner_name)}" 
+                                 style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 107, 157, 0.2);">
+                            <div class="conversation-info">
+                                <div class="partner-name">${this.escapeHtml(conv.partner_name)}</div>
+                                <div class="last-message">${this.escapeHtml(conv.last_message || 'Say hello! 👋')}</div>
+                            </div>
                         </div>
                         ${conv.unread_count > 0 ? `<div class="unread-badge">${conv.unread_count}</div>` : ''}
                     </div>
-                `).join('');
+                `;
+                }).join('');
             }
             
             async loadMessages() {

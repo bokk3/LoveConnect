@@ -237,14 +237,124 @@ $csrfToken = generateCSRFToken();
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="assets/style.css">
     <style>
+                .swipe-card {
+            position: absolute;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+            transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            animation: cardEntry 0.6s ease-out forwards;
+        }
+        
+        @keyframes cardEntry {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) translateY(0) scale(1);
+            }
+        }
+        
+        .swipe-card:nth-child(1) { animation-delay: 0s; }
+        .swipe-card:nth-child(2) { animation-delay: 0.1s; }
+        .swipe-card:nth-child(3) { animation-delay: 0.2s; }
+        
+        /* Responsive alignment fixes */
+        @media (max-width: 768px) {
+            .swipe-card {
+                max-width: 350px;
+            }
+            
+            .swipe-container {
+                padding: 1rem 0.5rem !important;
+            }
+            
+            .profile-stack {
+                max-width: 350px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .swipe-card {
+                max-width: 320px;
+            }
+            
+            .profile-stack {
+                max-width: 320px !important;
+                height: 550px !important;
+            }
+        }
+        
+        .profile-card-shimmer {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
         .profile-card {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85)) !important;
-            border: 2px solid rgba(255, 107, 157, 0.2) !important;
-            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1) !important;
-            backdrop-filter: blur(20px) !important;
-            border-radius: 25px !important;
-            overflow: hidden !important;
-            position: relative !important;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            border-radius: 28px;
+            box-shadow: 
+                0 25px 50px rgba(255, 107, 157, 0.25),
+                0 15px 35px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 35px 70px rgba(255, 107, 157, 0.3),
+                0 20px 45px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        
+        .profile-card:active {
+            cursor: grabbing;
+        }
+        
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 25px;
+            padding: 3px;
+            background: linear-gradient(135deg, #ff6b9d, #a8e6cf, #667eea);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            z-index: -1;
         }
         
         .profile-card::before {
@@ -264,16 +374,72 @@ $csrfToken = generateCSRFToken();
             box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2), 0 8px 20px rgba(0, 0, 0, 0.3) !important;
         }
         
+        .swipe-actions {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2.5rem;
+            position: relative;
+        }
+        
         .swipe-actions .btn {
-            border-radius: 20px !important;
-            padding: 12px 24px !important;
+            width: 75px;
+            height: 75px;
+            border-radius: 50% !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
             font-weight: 600 !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
-            transition: all 0.3s ease !important;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.25),
+                0 5px 15px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .swipe-actions .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 50%);
+            pointer-events: none;
         }
         
         .swipe-actions .btn:hover {
-            transform: translateY(-3px) !important;
+            transform: translateY(-8px) scale(1.15) !important;
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.3),
+                0 8px 20px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+        }
+        
+        .swipe-actions .btn:active {
+            transform: translateY(-5px) scale(1.05) !important;
+        }
+        
+        .swipe-actions .btn-secondary {
+            background: linear-gradient(135deg, #ff6b6b, #ff5252);
+        }
+        
+        .swipe-actions .btn-secondary:hover {
+            background: linear-gradient(135deg, #ff5252, #ff1744);
+        }
+        
+        .swipe-actions .btn-primary {
+            background: linear-gradient(135deg, #4ecdc4, #26c6da);
+        }
+        
+        .swipe-actions .btn-primary:hover {
+            background: linear-gradient(135deg, #26c6da, #00bcd4);
         }
         
         .match-stats {
@@ -357,8 +523,17 @@ $csrfToken = generateCSRFToken();
                 </div>
             <?php else: ?>
                 <!-- Swipe Container -->
-                <div class="swipe-container">
-                    <div class="profile-stack" id="profileStack">
+                <div class="swipe-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem;">
+                    <div class="profile-stack" id="profileStack" style="
+                        position: relative; 
+                        width: 100%; 
+                        max-width: 400px; 
+                        height: 600px; 
+                        margin: 0 auto;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
                         <?php foreach (array_reverse($availableProfiles) as $index => $profile): ?>
                             <?php
                             $interests = json_decode($profile['interests'] ?? '[]', true) ?: [];
@@ -377,28 +552,138 @@ $csrfToken = generateCSRFToken();
                             ?>
                             <div class="swipe-card" data-user-id="<?php echo $profile['id']; ?>" style="z-index: <?php echo count($availableProfiles) - $index; ?>;">
                                 <div class="profile-card">
-                                    <div class="profile-image">
+                                    <div class="profile-image" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; overflow: hidden; border-radius: 25px;">
                                         <?php if ($profile['profile_image']): ?>
-                                            <img src="<?php echo htmlspecialchars($profile['profile_image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($profile['username'], ENT_QUOTES, 'UTF-8'); ?>">
-                                        <?php else: ?>
-                                            <div class="profile-placeholder"><?php echo strtoupper(substr($profile['username'], 0, 1)); ?></div>
+                                            <img src="<?php echo htmlspecialchars($profile['profile_image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($profile['username'], ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;">
+                                        <?php else: 
+                                            // Generate a unique seed based on user ID for consistent images
+                                            $seed = $profile['id'] * 123 + 456;
+                                            $imageUrl = "https://picsum.photos/seed/{$seed}/400/600";
+                                        ?>
+                                            <img src="<?php echo $imageUrl; ?>" alt="<?php echo htmlspecialchars($profile['username'], ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                                         <?php endif; ?>
+                                        <!-- Subtle shimmer effect -->
+                                        <div class="profile-card-shimmer"></div>
                                     </div>
-                                    <div class="profile-info">
-                                        <div class="profile-name"><?php echo htmlspecialchars($profile['username'], ENT_QUOTES, 'UTF-8'); ?><?php echo $age; ?></div>
-                                        <div class="profile-details">
-                                            <?php echo htmlspecialchars($profile['location'] ?? 'Location not specified', ENT_QUOTES, 'UTF-8'); ?> • <?php echo $activeText; ?>
+                                    <!-- Enhanced overlay for better text readability -->
+                                    <div style="
+                                        position: absolute; 
+                                        bottom: 0; 
+                                        left: 0; 
+                                        right: 0; 
+                                        background: linear-gradient(
+                                            transparent 0%, 
+                                            rgba(0,0,0,0.1) 20%,
+                                            rgba(0,0,0,0.4) 50%,
+                                            rgba(0,0,0,0.8) 100%
+                                        ); 
+                                        height: 65%; 
+                                        pointer-events: none;
+                                        backdrop-filter: blur(1px);
+                                    "></div>
+                                    
+                                    <div class="profile-info" style="
+                                        position: absolute; 
+                                        bottom: 0; 
+                                        left: 0; 
+                                        right: 0; 
+                                        padding: 2.5rem 2rem 2rem; 
+                                        color: white; 
+                                        z-index: 2;
+                                    ">
+                                        <div class="profile-name" style="
+                                            font-size: 2.2rem; 
+                                            font-weight: 800; 
+                                            margin-bottom: 0.75rem; 
+                                            text-shadow: 0 3px 6px rgba(0,0,0,0.6);
+                                            letter-spacing: -0.5px;
+                                            line-height: 1.1;
+                                        "><?php echo htmlspecialchars($profile['username'], ENT_QUOTES, 'UTF-8'); ?><span style="font-weight: 400; opacity: 0.9;"><?php echo $age; ?></span></div>
+                                        <div class="profile-details" style="
+                                            font-size: 1.1rem; 
+                                            margin-bottom: 1rem; 
+                                            opacity: 0.95; 
+                                            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                                            font-weight: 500;
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 0.5rem;
+                                        ">
+                                            <span style="
+                                                background: rgba(255,255,255,0.2); 
+                                                backdrop-filter: blur(10px);
+                                                padding: 0.3rem 0.8rem;
+                                                border-radius: 15px;
+                                                font-size: 0.9rem;
+                                                border: 1px solid rgba(255,255,255,0.3);
+                                            ">📍 <?php echo htmlspecialchars($profile['location'] ?? 'Location not specified', ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <span style="
+                                                background: rgba(76, 217, 100, 0.3);
+                                                backdrop-filter: blur(10px);
+                                                padding: 0.3rem 0.8rem;
+                                                border-radius: 15px;
+                                                font-size: 0.9rem;
+                                                border: 1px solid rgba(76, 217, 100, 0.4);
+                                            ">🟢 <?php echo $activeText; ?></span>
                                         </div>
                                         <?php if ($profile['bio']): ?>
-                                            <div class="profile-bio"><?php echo htmlspecialchars($profile['bio'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                            <div class="profile-bio" style="
+                                                font-size: 1rem; 
+                                                line-height: 1.5; 
+                                                margin-bottom: 1.25rem; 
+                                                opacity: 0.95; 
+                                                text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                                                font-weight: 400;
+                                                max-height: 3.5rem;
+                                                overflow: hidden;
+                                                display: -webkit-box;
+                                                -webkit-line-clamp: 2;
+                                                -webkit-box-orient: vertical;
+                                            "><?php echo htmlspecialchars($profile['bio'], ENT_QUOTES, 'UTF-8'); ?></div>
                                         <?php endif; ?>
                                         <?php if (!empty($interests)): ?>
-                                            <div class="tags-container mt-sm">
-                                                <?php foreach (array_slice($interests, 0, 5) as $interest): ?>
-                                                    <span class="tag tag-secondary"><?php echo htmlspecialchars($interest, ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <div class="tags-container" style="display: flex; flex-wrap: wrap; gap: 0.6rem; max-height: 4rem; overflow: hidden;">
+                                                <?php 
+                                                $tagColors = [
+                                                    'rgba(255, 107, 157, 0.3)',
+                                                    'rgba(168, 230, 207, 0.3)', 
+                                                    'rgba(102, 126, 234, 0.3)',
+                                                    'rgba(255, 193, 77, 0.3)',
+                                                    'rgba(255, 121, 121, 0.3)'
+                                                ];
+                                                foreach (array_slice($interests, 0, 4) as $index => $interest): 
+                                                    $bgColor = $tagColors[$index % count($tagColors)];
+                                                ?>
+                                                    <span class="interest-tag-premium" style="
+                                                        background: <?php echo $bgColor; ?>; 
+                                                        backdrop-filter: blur(15px); 
+                                                        border: 1px solid rgba(255,255,255,0.4); 
+                                                        color: white; 
+                                                        padding: 0.5rem 1rem; 
+                                                        border-radius: 25px; 
+                                                        font-size: 0.9rem; 
+                                                        font-weight: 600;
+                                                        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                                                        transition: all 0.3s ease;
+                                                        cursor: pointer;
+                                                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                                                    " 
+                                                    onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)';" 
+                                                    onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)';"><?php echo htmlspecialchars($interest, ENT_QUOTES, 'UTF-8'); ?></span>
                                                 <?php endforeach; ?>
-                                                <?php if (count($interests) > 5): ?>
-                                                    <span class="tag tag-secondary">+<?php echo count($interests) - 5; ?> more</span>
+                                                <?php if (count($interests) > 4): ?>
+                                                    <span style="
+                                                        background: rgba(255,255,255,0.2); 
+                                                        backdrop-filter: blur(15px); 
+                                                        border: 1px solid rgba(255,255,255,0.4); 
+                                                        color: white; 
+                                                        padding: 0.5rem 1rem; 
+                                                        border-radius: 25px; 
+                                                        font-size: 0.9rem; 
+                                                        font-weight: 600;
+                                                        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                                                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                                                    ">+<?php echo count($interests) - 4; ?></span>
                                                 <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
@@ -452,10 +737,12 @@ $csrfToken = generateCSRFToken();
                                     <div class="profile-image" style="width: 60px; height: 60px; flex-shrink: 0;">
                                         <?php if ($match['profile_image']): ?>
                                             <img src="<?php echo htmlspecialchars($match['profile_image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($match['username'], ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--border-radius-full);">
-                                        <?php else: ?>
-                                            <div style="width: 100%; height: 100%; background: var(--gradient-primary); border-radius: var(--border-radius-full); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
-                                                <?php echo strtoupper(substr($match['username'], 0, 1)); ?>
-                                            </div>
+                                        <?php else: 
+                                            // Generate a unique seed based on user ID for consistent images
+                                            $seed = $match['id'] * 123 + 456;
+                                            $imageUrl = "https://picsum.photos/seed/{$seed}/200/200";
+                                        ?>
+                                            <img src="<?php echo $imageUrl; ?>" alt="<?php echo htmlspecialchars($match['username'], ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--border-radius-full);">
                                         <?php endif; ?>
                                     </div>
                                     <div class="flex-1">
@@ -589,7 +876,7 @@ $csrfToken = generateCSRFToken();
             const rotation = direction === 'right' ? '30deg' : '-30deg';
             
             card.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-            card.style.transform = `translateX(${translateX}) rotate(${rotation})`;
+            card.style.transform = `translate(-50%, -50%) translateX(${translateX}) rotate(${rotation})`;
             card.style.opacity = '0';
         }
 
@@ -645,15 +932,21 @@ $csrfToken = generateCSRFToken();
                     if (currentCard) {
                         const rotation = deltaX * 0.02;
                         const opacity = 1 - Math.abs(deltaX) * 0.001;
-                        currentCard.style.transform = `translateX(${deltaX * 0.1}px) rotate(${rotation}deg)`;
+                        currentCard.style.transform = `translate(-50%, -50%) translateX(${deltaX * 0.5}px) rotate(${rotation}deg)`;
                         currentCard.style.opacity = Math.max(0.3, opacity);
                     }
                 },
                 onDragEnd: () => {
                     const currentCard = getCurrentProfile();
                     if (currentCard) {
-                        currentCard.style.transform = '';
-                        currentCard.style.opacity = '';
+                        currentCard.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease-out';
+                        currentCard.style.transform = 'translate(-50%, -50%)';
+                        currentCard.style.opacity = '1';
+                        setTimeout(() => {
+                            if (currentCard && currentCard.style.transform === 'translate(-50%, -50%)') {
+                                currentCard.style.transition = '';
+                            }
+                        }, 300);
                     }
                 }
             });

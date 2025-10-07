@@ -11,6 +11,25 @@ require_once 'functions.php';
 startSecureSession();
 requireLogin();
 
+// Handle reset action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'reset_matches') {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $flash_error = 'Security token validation failed.';
+    } else {
+        try {
+            $result = resetMatchesAndSwipes();
+            if ($result['success']) {
+                $flash_success = $result['message'];
+            } else {
+                $flash_error = $result['message'];
+            }
+        } catch (Exception $e) {
+            error_log("Reset error: " . $e->getMessage());
+            $flash_error = 'Reset failed. Please try again.';
+        }
+    }
+}
+
 // Get user session statistics
 $sessionStats = getUserSessionStats();
 $username = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
@@ -52,6 +71,50 @@ function validateSession(): bool {
     } catch (PDOException $e) {
         error_log('Session validation error: ' . $e->getMessage());
         return false;
+    }
+}
+
+/**
+ * Reset all matches and swipes for fresh start
+ * @return array Result with success status and message
+ */
+function resetMatchesAndSwipes(): array {
+    try {
+        $pdo = getDbConnection();
+        
+        // Start transaction
+        $pdo->beginTransaction();
+        
+        // Count records before deletion
+        $matchCount = $pdo->query('SELECT COUNT(*) FROM matches')->fetchColumn();
+        $messageCount = $pdo->query('SELECT COUNT(*) FROM messages')->fetchColumn();
+        
+        // Clear all matches and swipes
+        $pdo->exec('DELETE FROM messages');
+        $pdo->exec('DELETE FROM matches');
+        
+        // Reset auto increment
+        $pdo->exec('ALTER TABLE matches AUTO_INCREMENT = 1');
+        $pdo->exec('ALTER TABLE messages AUTO_INCREMENT = 1');
+        
+        // Commit transaction
+        $pdo->commit();
+        
+        return [
+            'success' => true,
+            'message' => "Successfully reset! Cleared {$matchCount} matches and {$messageCount} messages. All users can now see each other again."
+        ];
+        
+    } catch (Exception $e) {
+        // Rollback on error
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("Reset matches error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Database error occurred during reset.'
+        ];
     }
 }
 
@@ -307,6 +370,16 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                     <li><a href="matches.php" class="nav-link">Discover</a></li>
                     <li><a href="profile.php" class="nav-link">Profile</a></li>
                     <li><a href="messages.php" class="nav-link">Messages</a></li>
+                    <li class="user-avatar-container" style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
+                        <?php 
+                        // Generate consistent placeholder avatar based on user ID  
+                        $seed = $_SESSION['user_id'] * 567 + 890;
+                        $userAvatarUrl = "https://picsum.photos/seed/{$seed}/100/100";
+                        ?>
+                        <img src="<?= $userAvatarUrl ?>" alt="<?= htmlspecialchars($username) ?>" 
+                             style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 107, 157, 0.3);">
+                        <span style="color: var(--text-primary); font-weight: 500;"><?= htmlspecialchars($username) ?></span>
+                    </li>
                     <li><a href="logout.php" class="nav-link">Logout</a></li>
                     <li class="theme-toggle-container">
                         <button type="button" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
@@ -320,6 +393,19 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
 
     <main class="container">
         <div class="flash-container"></div>
+        
+        <!-- Flash Messages -->
+        <?php if (isset($flash_error)): ?>
+            <div class="flash-message flash-error" style="background: #ffe6e6; border: 2px solid #ff6b6b; color: #cc0000; padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <?= htmlspecialchars($flash_error, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($flash_success)): ?>
+            <div class="flash-message flash-success" style="background: #e6ffe6; border: 2px solid #4CAF50; color: #2e7d32; padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+                <?= htmlspecialchars($flash_success, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endif; ?>
         
         <!-- Welcome Hero -->
         <div class="welcome-hero">
@@ -377,6 +463,12 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                         <div class="action-icon">💑</div>
                         <h3>View Matches</h3>
                         <p class="text-secondary">See who you've matched with</p>
+                    </div>
+                    
+                    <div class="action-card" style="border: 2px solid #ff6b6b; background: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,107,107,0.05));" onclick="showResetConfirm()">
+                        <div class="action-icon">🔄</div>
+                        <h3 style="color: #ff6b6b;">Reset Matches</h3>
+                        <p class="text-secondary">Clear all swipes and matches</p>
                     </div>
                 </div>
             </div>
@@ -499,8 +591,33 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
         </div>
     </main>
     
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 2rem; border-radius: 20px; max-width: 500px; margin: 1rem; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="margin-bottom: 1rem; color: #ff6b6b;">Reset All Matches & Swipes?</h3>
+            <p style="margin-bottom: 2rem; color: #666;">This will permanently delete all matches, swipes, and messages. Everyone will be able to see each other again. This action cannot be undone!</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="hideResetConfirm()" style="padding: 0.75rem 1.5rem; border: 2px solid #ccc; background: white; border-radius: 10px; cursor: pointer;">Cancel</button>
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken(), ENT_QUOTES, 'UTF-8') ?>">
+                    <input type="hidden" name="action" value="reset_matches">
+                    <button type="submit" style="padding: 0.75rem 1.5rem; border: 2px solid #ff6b6b; background: #ff6b6b; color: white; border-radius: 10px; cursor: pointer;">Yes, Reset Everything</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <script src="assets/app.js"></script>
     <script>
+        function showResetConfirm() {
+            document.getElementById('resetModal').style.display = 'flex';
+        }
+        
+        function hideResetConfirm() {
+            document.getElementById('resetModal').style.display = 'none';
+        }
+        
         // Auto-refresh session activity every 5 minutes
         setInterval(function() {
             fetch(window.location.href, {

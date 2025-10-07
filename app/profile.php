@@ -357,8 +357,13 @@ $csrfToken = generateCSRFToken();
                         <!-- Profile Picture Placeholder -->
                         <div class="form-group">
                             <label class="form-label">Profile Photo</label>
-                            <div class="profile-image" style="width: 120px; height: 120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: var(--gradient-primary); border-radius: var(--border-radius-full); color: white; font-size: 3rem; font-weight: bold;">
-                                <?php echo strtoupper(substr($currentUser['username'], 0, 1)); ?>
+                            <?php 
+                            // Generate consistent placeholder image based on user ID
+                            $seed = $currentUser['id'] * 567 + 890;
+                            $profileImageUrl = "https://picsum.photos/seed/{$seed}/400/400";
+                            ?>
+                            <div class="profile-image" style="width: 120px; height: 120px; margin: 0 auto; border-radius: var(--border-radius-full); overflow: hidden; border: 4px solid rgba(255, 107, 157, 0.3);">
+                                <img src="<?php echo $profileImageUrl; ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                             <small class="text-secondary">Photo upload feature coming soon!</small>
                         </div>
