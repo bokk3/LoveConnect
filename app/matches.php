@@ -236,6 +236,66 @@ $csrfToken = generateCSRFToken();
     <title>Discover - Dating App</title>
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .profile-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85)) !important;
+            border: 2px solid rgba(255, 107, 157, 0.2) !important;
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(20px) !important;
+            border-radius: 25px !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+        
+        .profile-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            opacity: 0.8;
+        }
+        
+        .dark-theme .profile-card {
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.85)) !important;
+            border-color: rgba(102, 126, 234, 0.3) !important;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2), 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        .swipe-actions .btn {
+            border-radius: 20px !important;
+            padding: 12px 24px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .swipe-actions .btn:hover {
+            transform: translateY(-3px) !important;
+        }
+        
+        .match-stats {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(102, 126, 234, 0.1)) !important;
+            border: 2px solid rgba(255, 107, 157, 0.2) !important;
+            border-radius: 20px !important;
+            backdrop-filter: blur(10px) !important;
+        }
+        
+        .interest-tag {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(168, 230, 207, 0.15)) !important;
+            border: 1px solid rgba(255, 107, 157, 0.3) !important;
+            border-radius: 20px !important;
+            color: var(--primary-color) !important;
+            font-weight: 500 !important;
+        }
+        
+        .interest-tag:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.25), rgba(168, 230, 207, 0.25)) !important;
+            transform: translateY(-1px) !important;
+        }
+    </style>
 </head>
 <body>
     <!-- App Header -->
@@ -248,6 +308,11 @@ $csrfToken = generateCSRFToken();
                     <li><a href="matches.php" class="nav-link active">Discover</a></li>
                     <li><a href="profile.php" class="nav-link">Profile</a></li>
                     <li><a href="messages.php" class="nav-link">Messages</a></li>
+                    <li class="theme-toggle-container">
+                        <button type="button" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
+                            <div class="theme-toggle-slider"></div>
+                        </button>
+                    </li>
                     <li><a href="logout.php" class="nav-link">Logout</a></li>
                 </ul>
             </nav>

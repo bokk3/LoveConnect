@@ -95,14 +95,12 @@ function validateSessionInDatabase(int $userId, string $sessionId): bool {
     try {
         $pdo = getDbConnection();
         $stmt = $pdo->prepare('
-            SELECT s.id, s.last_activity, u.username, u.role 
-            FROM sessions s
-            JOIN users u ON s.user_id = u.id
-            WHERE s.user_id = ? AND s.session_id = ? 
-            AND s.last_activity > DATE_SUB(NOW(), INTERVAL ? SECOND)
-            LIMIT 1
+            SELECT s.id, s.last_activity, u.username 
+            FROM sessions s 
+            JOIN users u ON s.user_id = u.id 
+            WHERE s.session_id = ? AND s.user_id = ? AND s.expires_at > NOW()
         ');
-        $stmt->execute([$userId, $sessionId, SESSION_TIMEOUT]);
+        $stmt->execute([$sessionId, $userId]);
         $session = $stmt->fetch();
         
         if (!$session) {
@@ -111,7 +109,7 @@ function validateSessionInDatabase(int $userId, string $sessionId): bool {
         
         // Update session variables with fresh data
         $_SESSION['username'] = $session['username'];
-        $_SESSION['role'] = $session['role'];
+        // Session restored successfully
         
         return true;
         
@@ -142,9 +140,8 @@ function cleanupUserSessions(int $userId): void {
  * 
  * @param int $userId User ID
  * @param string $username Username
- * @param string $role User role
  */
-function createUserSession(int $userId, string $username, string $role): void {
+function createUserSession(int $userId, string $username): void {
     // Regenerate session ID for security
     session_regenerate_id(true);
     
@@ -163,7 +160,6 @@ function createUserSession(int $userId, string $username, string $role): void {
         // Set session variables
         $_SESSION['user_id'] = $userId;
         $_SESSION['username'] = $username;
-        $_SESSION['role'] = $role;
         $_SESSION['session_id'] = $sessionId;
         $_SESSION['created_at'] = time();
         $_SESSION['last_regeneration'] = time();
@@ -173,7 +169,7 @@ function createUserSession(int $userId, string $username, string $role): void {
         generateCSRFToken();
         
         // Log successful login
-        error_log("Successful login for user: {$username} (role: {$role}) from IP: " . getClientIP());
+        error_log("Successful login for user: {$username} from IP: " . getClientIP());
         
     } catch (PDOException $e) {
         error_log('Failed to create session: ' . $e->getMessage());

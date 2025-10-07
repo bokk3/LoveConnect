@@ -494,6 +494,34 @@ if ($currentMatchId && $currentMatchId > 0) {
                 display: none;
             }
         }
+        
+        /* Enhanced colorful styling */
+        .messages-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85)) !important;
+            border: 2px solid rgba(255, 107, 157, 0.15) !important;
+            border-radius: 25px !important;
+            backdrop-filter: blur(20px) !important;
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.1) !important;
+        }
+        
+        .message-bubble.sent {
+            background: var(--gradient-primary) !important;
+            border-radius: 20px 20px 5px 20px !important;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3) !important;
+        }
+        
+        .message-bubble.received {
+            background: linear-gradient(135deg, rgba(168, 230, 207, 0.2), rgba(255, 255, 255, 0.9)) !important;
+            border: 2px solid rgba(168, 230, 207, 0.3) !important;
+            border-radius: 20px 20px 20px 5px !important;
+        }
+        
+        .chat-input-container {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+            border: 2px solid rgba(255, 107, 157, 0.2) !important;
+            border-radius: 25px !important;
+            backdrop-filter: blur(10px) !important;
+        }
     </style>
 </head>
 <body>

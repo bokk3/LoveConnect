@@ -239,12 +239,12 @@ docker-compose logs -f mariadb
 
 - **Web Application**: http://localhost:8080
 - **Demo Dating Profiles**: 
-  - **admin** / password123 (Admin user)
-  - **alex_tech** / password123 (Software Developer, 28, interests: coding, hiking)
-  - **sarah_artist** / password123 (Artist, 25, interests: art, music, travel)
-  - **mike_chef** / password123 (Chef, 32, interests: cooking, wine, fitness)
-  - **emma_doctor** / password123 (Doctor, 29, interests: medicine, yoga, reading)
-  - **jordan_nb** / password123 (Writer, 26, interests: writing, coffee, films)
+  - **admin** / admin123 (Admin user)
+  - **alex_tech** / editor123 (Software Developer, 28, interests: coding, hiking)
+  - **sarah_artist** / user123 (Artist, 25, interests: art, music, travel)
+  - **mike_chef** / chef123 (Chef, 32, interests: cooking, wine, fitness)
+  - **emma_doctor** / doctor123 (Doctor, 29, interests: medicine, yoga, reading)
+  - **jordan_nb** / designer123 (Writer, 26, interests: writing, coffee, films)
 
 ### 4. Database Access (Optional)
 

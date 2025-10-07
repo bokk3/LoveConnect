@@ -14,7 +14,7 @@ requireLogin();
 // Get user session statistics
 $sessionStats = getUserSessionStats();
 $username = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
-$role = htmlspecialchars($_SESSION['role'], ENT_QUOTES, 'UTF-8');
+$userType = ($username === 'admin') ? 'admin' : 'user'; // Simple user type detection
 $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
 
 /**
@@ -125,12 +125,27 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
     <link rel="stylesheet" href="assets/style.css">
     <style>
         .welcome-hero {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #ff6b9d 0%, #667eea 50%, #a8e6cf 100%);
             color: white;
             text-align: center;
-            padding: var(--spacing-xxl) var(--spacing-lg);
-            border-radius: var(--border-radius-xl);
+            padding: 3rem 2rem;
+            border-radius: 25px;
+            margin-top: 2rem;
             margin-bottom: var(--spacing-xl);
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="30" cy="70" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            opacity: 0.3;
         }
         
         .hero-title {
@@ -152,7 +167,10 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
         }
         
         .stat-card {
-            background: var(--surface-color);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            border: 2px solid rgba(255, 107, 157, 0.15);
+            box-shadow: 0 8px 32px rgba(255, 107, 157, 0.1);
+            backdrop-filter: blur(20px);
             padding: var(--spacing-lg);
             border-radius: var(--border-radius-lg);
             box-shadow: var(--shadow-md);
@@ -162,12 +180,41 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
         }
         
         .stat-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(255, 107, 157, 0.2);
+            border-color: var(--primary-color);
         }
         
         .stat-icon {
             font-size: 2.5rem;
             margin-bottom: var(--spacing-sm);
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+            margin: 0 auto var(--spacing-sm) auto;
+        }
+        
+        .stat-icon.matches {
+            background: linear-gradient(135deg, #ff6b9d, #ff8fb3);
+        }
+        
+        .stat-icon.views {
+            background: linear-gradient(135deg, #667eea, #8fa4f3);
+        }
+        
+        .stat-icon.messages {
+            background: linear-gradient(135deg, #a8e6cf, #88d8a3);
+        }
+        
+        .stat-icon.likes {
+            background: linear-gradient(135deg, #ffd93d, #ffed4e);
         }
         
         .stat-number {
@@ -283,25 +330,25 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
         <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">💖</div>
+                <div class="stat-icon matches">💖</div>
                 <div class="stat-number"><?= rand(5, 25) ?></div>
                 <div class="stat-label">Total Matches</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">👀</div>
+                <div class="stat-icon views">👀</div>
                 <div class="stat-number"><?= rand(50, 150) ?></div>
                 <div class="stat-label">Profiles Viewed</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">💬</div>
+                <div class="stat-icon messages">💬</div>
                 <div class="stat-number"><?= rand(10, 40) ?></div>
                 <div class="stat-label">Messages Sent</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">⭐</div>
+                <div class="stat-icon likes">⭐</div>
                 <div class="stat-number"><?= rand(15, 55) ?></div>
                 <div class="stat-label">Likes Received</div>
             </div>
@@ -348,10 +395,10 @@ $sessionTimeout = SESSION_TIMEOUT / 60; // Convert to minutes
                     </div>
                     
                     <div class="stat-item">
-                        <span class="stat-label">Role</span>
+                        <span class="stat-label">User Type</span>
                         <span class="stat-value">
-                            <span class="role-badge role-<?= $role ?>">
-                                <?= ucfirst($role) ?>
+                            <span class="role-badge role-<?= $userType ?>">
+                                <?= ucfirst($userType) ?>
                             </span>
                         </span>
                     </div>

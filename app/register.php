@@ -93,8 +93,8 @@ function processRegistration(): array {
         $passwordHash = password_hash($password, PASSWORD_ARGON2ID);
         
         // Insert new user
-        $stmt = $pdo->prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)');
-        $result = $stmt->execute([$username, $email, $passwordHash, 'user']);
+        $stmt = $pdo->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
+        $result = $stmt->execute([$username, $email, $passwordHash]);
         
         if ($result) {
             error_log("New user registered: $username ($email)");
@@ -119,7 +119,7 @@ function processRegistration(): array {
     <style>
         .register-page {
             min-height: 100vh;
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b9d 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -127,13 +127,21 @@ function processRegistration(): array {
         }
         
         .register-container {
-            background: var(--surface-color);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
             padding: var(--spacing-xxl);
-            border-radius: var(--border-radius-xl);
-            box-shadow: var(--shadow-xl);
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.05);
             width: 100%;
             max-width: 450px;
             animation: slideInUp 0.6s ease-out;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .dark-theme .register-container {
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.85));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(102, 126, 234, 0.1);
         }
         
         .register-header {
@@ -144,6 +152,18 @@ function processRegistration(): array {
         .app-logo {
             font-size: 3rem;
             margin-bottom: var(--spacing-md);
+            background: linear-gradient(135deg, #ff6b9d, #667eea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+        
+        .dark-theme .app-logo {
+            background: linear-gradient(135deg, #ff8fb3, #8fa4f3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .app-title {

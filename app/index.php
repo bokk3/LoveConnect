@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💕 LoveConnect - Find Your Perfect Match</title>
-    <link rel="stylesheet" href="app/assets/style.css">
+    <link rel="stylesheet" href="assets/style.css">
     <style>
         :root {
             --primary-pink: #ff6b9d;
@@ -264,8 +264,8 @@
             </p>
             
             <div class="hero-buttons">
-                <a href="app/register.php" class="btn btn-primary">💖 Get Started Free</a>
-                <a href="app/login.php" class="btn btn-secondary">🔐 Sign In</a>
+                <a href="register.php" class="btn btn-primary">💖 Get Started Free</a>
+                <a href="login.php" class="btn btn-secondary">🔐 Sign In</a>
             </div>
 
             <div class="features">

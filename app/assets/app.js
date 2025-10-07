@@ -745,16 +745,27 @@ const DatingApp = {
    */
   async likeProfile(userId) {
     try {
-      const response = await Http.post('/api/matches/like', { user_id: userId });
+      const formData = new FormData();
+      formData.append('action', 'like');
+      formData.append('user_id', userId);
+      formData.append('csrf_token', Utils.getCSRFToken());
+      
+      const response = await fetch('matches.php', {
+        method: 'POST',
+        body: formData
+      });
       const result = await response.json();
       
-      if (result.match) {
-        Flash.success("It's a match! 🎉");
+      if (result.success) {
+        if (result.match) {
+          Flash.success("It's a match! 🎉");
+        } else {
+          Flash.info('Profile liked!');
+        }
+        this.nextProfile();
       } else {
-        Flash.info('Profile liked!');
+        Flash.error(result.message || 'Failed to like profile');
       }
-      
-      this.nextProfile();
     } catch (error) {
       Flash.error('Failed to like profile');
     }
@@ -766,8 +777,22 @@ const DatingApp = {
    */
   async passProfile(userId) {
     try {
-      await Http.post('/api/matches/pass', { user_id: userId });
-      this.nextProfile();
+      const formData = new FormData();
+      formData.append('action', 'pass');
+      formData.append('user_id', userId);
+      formData.append('csrf_token', Utils.getCSRFToken());
+      
+      const response = await fetch('matches.php', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        this.nextProfile();
+      } else {
+        Flash.error(result.message || 'Failed to pass profile');
+      }
     } catch (error) {
       Flash.error('Failed to pass profile');
     }

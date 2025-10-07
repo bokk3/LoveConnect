@@ -232,6 +232,76 @@ $csrfToken = generateCSRFToken();
     <title>My Profile - Dating App</title>
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .profile-header {
+            background: var(--gradient-primary) !important;
+            border-radius: 25px !important;
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.3) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        
+        .profile-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            opacity: 0.3;
+        }
+        
+        .profile-form .form-group {
+            margin-bottom: 1.5rem !important;
+        }
+        
+        .profile-form .form-input {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+            border: 2px solid rgba(255, 107, 157, 0.2) !important;
+            border-radius: 15px !important;
+            padding: 12px 20px !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .profile-form .form-input:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+        }
+        
+        .dark-theme .profile-form .form-input {
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.7)) !important;
+            border-color: rgba(102, 126, 234, 0.3) !important;
+            color: white !important;
+        }
+        
+        .interest-selector {
+            background: linear-gradient(135deg, rgba(168, 230, 207, 0.1), rgba(255, 107, 157, 0.1)) !important;
+            border: 2px solid rgba(168, 230, 207, 0.3) !important;
+            border-radius: 20px !important;
+            padding: 20px !important;
+        }
+        
+        .interest-option {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6)) !important;
+            border: 2px solid rgba(255, 107, 157, 0.2) !important;
+            border-radius: 15px !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .interest-option.selected {
+            background: var(--gradient-primary) !important;
+            border-color: var(--primary-color) !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3) !important;
+        }
+        
+        .interest-option:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.2) !important;
+        }
+    </style>
 </head>
 <body>
     <!-- App Header -->
