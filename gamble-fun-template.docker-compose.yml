@@ -1,0 +1,77 @@
+# gamble-fun Docker Compose Template
+# Recommended port allocation: 3003-3004
+
+version: '3.8'
+
+services:
+  # Frontend service (React/Vue/Angular)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gamble_frontend
+    ports:
+      - "3003:3000"  # Standard frontend port
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3004
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - gamble_network
+    restart: unless-stopped
+
+  # Backend API service
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gamble_api
+    ports:
+      - "3004:8000"  # API port
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=gamble_fun
+      - DB_USER=gambleuser
+      - DB_PASS=gamblepass
+    depends_on:
+      - database
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - gamble_network
+    restart: unless-stopped
+
+  # Database service (PostgreSQL example)
+  database:
+    image: postgres:15-alpine
+    container_name: gamble_database
+    environment:
+      POSTGRES_DB: gamble_fun
+      POSTGRES_USER: gambleuser
+      POSTGRES_PASSWORD: gamblepass
+    volumes:
+      - gamble_db_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - gamble_network
+    restart: unless-stopped
+    # Note: No external port exposed for security
+
+networks:
+  gamble_network:
+    driver: bridge
+    name: gamble_fun_network
+
+volumes:
+  gamble_db_data:
+    driver: local
+    name: gamble_fun_db_data
+
+# Access URLs:
+# Frontend: http://localhost:3003
+# API: http://localhost:3004

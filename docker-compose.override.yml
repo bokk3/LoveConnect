@@ -1,0 +1,32 @@
+version: '3.8'
+
+# Override configuration for standardized port allocation
+# Usage: docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+
+services:
+  # Update Nginx to use port 3005
+  nginx:
+    ports:
+      - "3005:80"  # Changed from 8080 to 3005
+    container_name: loveconnect_nginx
+    
+  # Update PHP-FPM container name
+  php-fpm:
+    container_name: loveconnect_php
+    # Add port 3006 for potential API access
+    ports:
+      - "3006:9000"  # Optional: Direct PHP-FPM access
+      
+  # Update MariaDB container name and keep internal port
+  mariadb:
+    container_name: loveconnect_mariadb
+    ports:
+      - "3307:3306"  # Keep current external port for now
+    
+networks:
+  login_network:
+    name: loveconnect_network
+    
+volumes:
+  mariadb_data:
+    name: loveconnect_db_data
